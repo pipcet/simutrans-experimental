@@ -1495,6 +1495,10 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 		}
 		
 		grund_t *gr = welt->lookup(pos_origin);
+		if(!gr)
+		{
+			gr = welt->lookup_kartenboden(pos_origin.get_2d());
+		}
 		gebaeude_t *gb = gr->find<gebaeude_t>();
 		
 		building = gb;
