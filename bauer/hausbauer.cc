@@ -451,19 +451,7 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 						DBG_MESSAGE("hausbauer_t::baue()","get_tile() empty at %i,%i",k.x,k.y);
 				continue;
 			}
-			gebaeude_t *gb = new gebaeude_t(welt, pos + k, sp, tile);
-			if (first_building == NULL) {
-				first_building = gb;
-			}
-
-			if(besch->ist_fabrik()) {
-				gb->set_fab((fabrik_t *)param);
-			}
-			// try to fake old building
-			else if(welt->get_zeit_ms() < 2) {
-				// Hajo: after staring a new map, build fake old buildings
-				gb->add_alter(10000ll);
-			}
+			
 			grund_t *gr;
 			/*if(besch->get_allow_underground() == 1) 
 			{
@@ -475,15 +463,11 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 			{*/
 				gr = welt->lookup_kartenboden(pos.get_2d() + k);
 			//}
-			if(gr->ist_wasser()) {
-				gr->obj_add(gb);
-			} else if (besch->get_utyp() == haus_besch_t::hafen) {
-				// it's a dock!
-				gr->obj_add(gb);
-			}
-			else {
+			
+			leitung_t *lt = NULL;
+
+			if(!gr->ist_wasser() && besch->get_utyp() != haus_besch_t::hafen)
 				// very likely remove all
-				leitung_t *lt = NULL;
 				if(!gr->hat_wege()) {
 					lt = gr->find<leitung_t>();
 					if(lt) {
@@ -495,10 +479,15 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 				// Build fundament up or down?  Up is the default.
 				bool build_up = true;
 				if (dim.x == 1 && dim.y == 1) {
-					// Consider building DOWNWARD.
-					koord front_side_neighbor= koord(0,0);
-					koord other_front_side_neighbor= koord(0,0);
-					switch (org_layout) {
+					if(ribi_t::ist_einfach(gr->get_grund_hang())) {
+						fprintf(stderr, "building down, three corners down at <%d,%d> (%d)\n", pos.x, pos.y, gr->get_grund_hang());
+						build_up = false;
+					} else if(ribi_t::is_threeway(gr->get_grund_hang())) {
+ 						build_up = true;
+					} else {
+						koord front_side_neighbor= koord(0,0);
+						koord other_front_side_neighbor= koord(0,0);
+						switch (org_layout) {
 						case 12:
 						case 4: // SE
 							other_front_side_neighbor = koord(1,0);
@@ -533,29 +522,31 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 							break;
 						default: // should not happen
 							break;
-					}
-					if(  front_side_neighbor != koord(0,0)  ) {
-						const grund_t* front_gr = welt->lookup_kartenboden(pos.get_2d() + front_side_neighbor);
-						if(  !front_gr || (front_gr->get_weg_hang() != hang_t::flach)  ) {
-							// Nothing in front, or sloped.  For a corner building, try the other front side.
-							if(  other_front_side_neighbor != koord(0,0)  ) {
-								const grund_t* other_front_gr = welt->lookup_kartenboden(pos.get_2d() + other_front_side_neighbor);
-								if (other_front_gr && (other_front_gr->get_weg_hang() == hang_t::flach)  ) {
-									// Prefer the other front side.
-									front_side_neighbor = other_front_side_neighbor;
-									front_gr = other_front_gr;
+						}
+						if(  front_side_neighbor != koord(0,0)  ) {
+							const grund_t* front_gr = welt->lookup_kartenboden(pos.get_2d() + front_side_neighbor);
+							if(  !front_gr || (front_gr->get_weg_hang() != hang_t::flach)  ) {
+								// Nothing in front, or sloped.  For a corner building, try the other front side.
+								if(  other_front_side_neighbor != koord(0,0)  ) {
+									const grund_t* other_front_gr = welt->lookup_kartenboden(pos.get_2d() + other_front_side_neighbor);
+									if (other_front_gr && (other_front_gr->get_weg_hang() == hang_t::flach)  ) {
+										// Prefer the other front side.
+										front_side_neighbor = other_front_side_neighbor;
+										front_gr = other_front_gr;
+									}
 								}
 							}
-						}
-						if(  front_gr  ) {
-							// There really is land in front of this building
-							sint8 front_z = front_gr->get_pos().z + front_gr->get_weg_yoff();
-							// get_weg_yoff will change from the "ground" level to the level of
-							// a flat bridge end on a slope.  (Otherwise it's zero.)
-							// So this is the desired level...
-							if (front_z == gr->get_pos().z) {
+							if(  front_gr  ) {
+								// There really is land in front of this building
+								sint8 front_z = front_gr->get_pos().z + front_gr->get_weg_yoff();
+								// get_weg_yoff will change from the "ground" level to the level of
+								// a flat bridge end on a slope.  (Otherwise it's zero.)
+								// So this is the desired level...
+								if (front_z == gr->get_pos().z &&
+								    front_z > welt->get_grundwasser()) {
 								// Build down to meet the front side.
 								build_up = false;
+								}
 							}
 							// Otherwise, prefer to build up.
 							// We are doing the correct thing whenever the building is facing a flat road.
@@ -570,17 +561,31 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 				welt->access(gr->get_pos().get_2d())->boden_ersetzen(gr, gr2);
 				gr = gr2;
 //DBG_DEBUG("hausbauer_t::baue()","ground count now %i",gr->obj_count());
-				gr->obj_add( gb );
-				if(lt) {
-					gr->obj_add( lt );
-				}
-				if(needs_ground_recalc  &&  welt->is_within_limits(pos.get_2d()+k+koord(1,1))  &&  (k.y+1==dim.y  ||  k.x+1==dim.x)) {
-					welt->lookup_kartenboden(pos.get_2d()+k+koord(1,0))->calc_bild();
-					welt->lookup_kartenboden(pos.get_2d()+k+koord(0,1))->calc_bild();
-					welt->lookup_kartenboden(pos.get_2d()+k+koord(1,1))->calc_bild();
-				}
+			gebaeude_t *gb = new gebaeude_t(welt, pos + k, sp, tile);
+			if (first_building == NULL) {
+				first_building = gb;
 			}
-			gb->set_pos( gr->get_pos() );
+
+			if(besch->ist_fabrik()) {
+				gb->set_fab((fabrik_t *)param);
+			}
+			// try to fake old building
+			else if(welt->get_zeit_ms() < 2) {
+				// Hajo: after staring a new map, build fake old buildings
+				gb->add_alter(10000ll);
+			}
+			gr->obj_add( gb );
+			if(lt)
+			{
+				gr->obj_add( lt );
+			}
+			if(needs_ground_recalc  &&  welt->is_within_limits(pos.get_2d()+k+koord(1,1))  &&  (k.y+1==dim.y  ||  k.x+1==dim.x))
+			{
+				welt->lookup_kartenboden(pos.get_2d()+k+koord(1,0))->calc_bild();
+				welt->lookup_kartenboden(pos.get_2d()+k+koord(0,1))->calc_bild();
+				welt->lookup_kartenboden(pos.get_2d()+k+koord(1,1))->calc_bild();
+			}
+			//gb->set_pos( gr->get_pos() );
 			if(besch->ist_ausflugsziel()) {
 				welt->add_ausflugsziel( gb );
 			}
