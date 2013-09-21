@@ -5613,7 +5613,7 @@ void karte_t::update_history()
 	finance_history_year[0][WORLD_FACTORIES] = finance_history_month[0][WORLD_FACTORIES] = fab_list.get_count();
 
 	// now step all towns (to generate passengers)
-	const sint64 bev = 0;
+	sint64 bev = 0;
 	sint64 total_pas = 1, trans_pas = 0;
 	sint64 total_mail = 1, trans_mail = 0;
 	sint64 total_goods = 1, supplied_goods = 0;
