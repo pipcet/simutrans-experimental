@@ -4300,11 +4300,6 @@ int haltestelle_t::count_commuters_to(koord pos)
 	FOR(vector_tpl<ware_t>, & ware, *warray) 
 	{
 		if(ware.is_commuter() && ware.get_zielpos() == pos) {
-			fprintf(stderr, "%d commuters at <%d,%d> %p\n",
-				ware.menge,
-				get_basis_pos().x,
-				get_basis_pos().y,
-				this);
 			count += ware.menge;
 		}
 	}

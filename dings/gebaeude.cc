@@ -172,7 +172,6 @@ gebaeude_t::gebaeude_t(karte_t *welt, koord3d pos, spieler_t *sp, const haus_til
  */
 gebaeude_t::~gebaeude_t()
 {
-	fprintf(stderr, "destroying gebaeude %p\n", this);
 	stadt_t* our_city = get_stadt();
 	if(our_city && !welt->get_is_shutting_down()) 
 	{
@@ -234,9 +233,6 @@ void gebaeude_t::check_road_tiles(bool del)
 	vector_tpl<gebaeude_t*> building_list;
 	building_list.append(this);
 	
-	fprintf(stderr, "check_road_tiles del %d this %p <%d,%d,%d>\n",
-		del, this, pos.x, pos.y, pos.z);
-
 	for(k.y = 0; k.y < size.y; k.y ++) 
 	{
 		for(k.x = 0; k.x < size.x; k.x ++) 
@@ -271,8 +267,6 @@ void gebaeude_t::check_road_tiles(bool del)
 			}
 			if(!gr_this)
 			{
-				fprintf(stderr, "no road at <%d,%d,%d>\n",
-					pos3d.x, pos3d.y, pos3d.z);
 				continue;
 			}
 			strasse_t* str = (strasse_t*)gr_this->get_weg(road_wt);
@@ -281,19 +275,11 @@ void gebaeude_t::check_road_tiles(bool del)
 				if(del)
 				{
 					str->connected_buildings.remove(this);
-					fprintf(stderr, "check_road_tiles del %d this %p str %p at <%d,%d,%d>\n",
-						del, this, str, pos3d.x, pos3d.y, pos3d.z);
-
 				}
 				else
 				{
-					fprintf(stderr, "connecting building %p str %p at <%d,%d,%d>\n",
-						this, str, pos3d.x, pos3d.y, pos3d.z);
 					str->connected_buildings.append_unique(this);
 				}
-			} else {
-				fprintf(stderr, "no str at <%d,%d,%d>\n",
-					pos3d.x, pos3d.y, pos3d.z);
 			}
 
 		}

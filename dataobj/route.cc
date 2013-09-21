@@ -323,9 +323,6 @@ bool route_t::find_route(karte_t *welt, const koord3d start, fahrer_t *fahr, con
 				}
 				
 				strasse_t* str = (strasse_t*)gr->get_weg(road_wt);
-				fprintf(stderr, "str %p at <%d,%d,%d>\n", str,
-					gr->get_pos().x,
-					gr->get_pos().y, gr->get_pos().z);
 
 				if(str && str->connected_buildings.get_count() > 0)
 				{

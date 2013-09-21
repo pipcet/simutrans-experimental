@@ -1489,8 +1489,6 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 			for(  sint16 x=0;  x<besch->get_haus()->get_b(rotate);  x++  ) {
 				gebaeude_t *gb = welt->lookup_kartenboden( pos_origin.get_2d()+koord(x,y) )->find<gebaeude_t>();
 				if(  gb  ) {
-					fprintf(stderr, "fab %p gb %p\n",
-						this, gb);
 					gb->set_fab(this);
 				}
 			}

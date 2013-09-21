@@ -6660,8 +6660,6 @@ int convoi_t::count_commuters_to(koord pos)
 		FOR(slist_tpl< ware_t>, const& iter, fahr[i]->get_fracht()) 
 		{	
 			if(iter.is_commuter() && iter.get_zielpos() == pos) {
-				fprintf(stderr, "%d commuters in convoy %p\n",
-					iter.menge, this);
 				count += iter.menge;
 			}
 		}
