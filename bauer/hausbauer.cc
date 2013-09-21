@@ -451,6 +451,7 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 						DBG_MESSAGE("hausbauer_t::baue()","get_tile() empty at %i,%i",k.x,k.y);
 				continue;
 			}
+			
 			grund_t *gr;
 			/*if(besch->get_allow_underground() == 1) 
 			{
@@ -462,13 +463,10 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 			{*/
 				gr = welt->lookup_kartenboden(pos.get_2d() + k);
 			//}
-
+			
 			leitung_t *lt = NULL;
-			if(gr->ist_wasser()) {
-			} else if (besch->get_utyp() == haus_besch_t::hafen) {
-				// it's a dock!
-			}
-			else {
+
+			if(!gr->ist_wasser() && besch->get_utyp() != haus_besch_t::hafen)
 				// very likely remove all
 				if(!gr->hat_wege()) {
 					lt = gr->find<leitung_t>();
@@ -563,9 +561,7 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 				welt->access(gr->get_pos().get_2d())->boden_ersetzen(gr, gr2);
 				gr = gr2;
 //DBG_DEBUG("hausbauer_t::baue()","ground count now %i",gr->obj_count());
-			}
-							
-			gebaeude_t *gb = new gebaeude_t(welt, gr->get_pos(), sp, tile);
+			gebaeude_t *gb = new gebaeude_t(welt, pos + k, sp, tile);
 			if (first_building == NULL) {
 				first_building = gb;
 			}
@@ -579,14 +575,17 @@ gebaeude_t* hausbauer_t::baue(karte_t* welt, spieler_t* sp, koord3d pos, int org
 				gb->add_alter(10000ll);
 			}
 			gr->obj_add( gb );
-			if(lt) {
+			if(lt)
+			{
 				gr->obj_add( lt );
 			}
-			if(needs_ground_recalc  &&  welt->is_within_limits(pos.get_2d()+k+koord(1,1))  &&  (k.y+1==dim.y  ||  k.x+1==dim.x)) {
+			if(needs_ground_recalc  &&  welt->is_within_limits(pos.get_2d()+k+koord(1,1))  &&  (k.y+1==dim.y  ||  k.x+1==dim.x))
+			{
 				welt->lookup_kartenboden(pos.get_2d()+k+koord(1,0))->calc_bild();
 				welt->lookup_kartenboden(pos.get_2d()+k+koord(0,1))->calc_bild();
 				welt->lookup_kartenboden(pos.get_2d()+k+koord(1,1))->calc_bild();
 			}
+			//gb->set_pos( gr->get_pos() );
 			if(besch->ist_ausflugsziel()) {
 				welt->add_ausflugsziel( gb );
 			}

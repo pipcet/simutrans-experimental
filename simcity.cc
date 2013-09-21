@@ -3061,11 +3061,13 @@ void stadt_t::calc_growth()
 		
 		if(1 || r < growth_per_10000)
 		{
+			bev += 100;
 			if(!city->renovate_city_building(gb))
 			{
 			}
 			// implement growth here
-		} else if(r < growth_per_10000 + shrinkage_per_10000)
+		}
+		else if(r < growth_per_10000 + shrinkage_per_10000)
 		{
 			if(city->can_shrink()) {
 				delete gb;
@@ -6092,7 +6094,7 @@ void stadt_t::baue(bool new_town)
 			const uint32 dist(koord_distance(c, gb->get_pos()));
 			const uint32 distance_rate = 100 - (dist * 100) / maxdist;
 			if(  spieler_t::check_owner(gb->get_besitzer(),NULL)  && simrand(100, "void stadt_t::baue") < distance_rate) {
-				if(renovate_city_building(gb)) { was_renovated++;}
+				//if(renovate_city_building(gb)) { was_renovated++;}
 			}
 		}
 		INT_CHECK("simcity 5134");
