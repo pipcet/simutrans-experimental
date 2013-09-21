@@ -1781,6 +1781,7 @@ stadt_t::stadt_t(spieler_t* sp, koord pos, sint32 citizens) :
 	change_size( citizens );
 
 	// fill with start citizen ...
+	// TODO: Add jobs and visitor demand
 	sint64 bew = get_einwohner();
 	for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++) {
 		city_history_year[year][HIST_CITICENS] = bew;
@@ -1813,7 +1814,7 @@ stadt_t::stadt_t(spieler_t* sp, koord pos, sint32 citizens) :
 	number_of_cars = 0;
 }
 
-
+// TODO: Remove this deprecated code
 void stadt_t::calc_internal_passengers()
 {
 	//const uint32 median_town_size =welt->get_settings().get_mittlere_einwohnerzahl();
@@ -1926,29 +1927,31 @@ void stadt_t::rdwr(loadsave_t* file)
 				city_history_month[month][hist_type] = 0;
 			}
 		}
+		// TODO: Add jobs and visitor demand
 		city_history_year[0][HIST_CITICENS] = get_einwohner();
 		city_history_year[0][HIST_CITICENS] = get_einwohner();
 	}
+	
+	const int adapted_max_city_history = file->get_experimental_version() < 12 ? MAX_CITY_HISTORY + 1 : MAX_CITY_HISTORY;
 
 	// we probably need to load/save the city history
 	if (file->get_version() < 86000) 
 	{
 		DBG_DEBUG("stadt_t::rdwr()", "is old version: No history!");
 	}
-	else if(file->get_version()<99016) 
+	else if(file->get_version() < 99016) 
 	{
 		// 86.00.0 introduced city history
 		for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++) 
 		{
-			for (uint hist_type = 0; hist_type < 2; hist_type++) 
-			{
-				file->rdwr_longlong(city_history_year[year][hist_type]);
-			}
-			for (uint hist_type = 4; hist_type < 7; hist_type++) 
+			file->rdwr_longlong(city_history_year[year][0]);
+			file->rdwr_longlong(city_history_year[year][3]);
+			file->rdwr_longlong(city_history_year[year][4]);
+			for (uint hist_type = 6; hist_type < 9; hist_type++) 
 			{
 				if(hist_type == HIST_PAS_WALKED)
 				{
-					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
+					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers, and versions earlier than 12 did not record jobs or visitor demand.
 					city_history_year[year][hist_type] = 0;
 					continue;
 				}
@@ -1957,15 +1960,14 @@ void stadt_t::rdwr(loadsave_t* file)
 		}
 		for (uint month = 0; month < MAX_CITY_HISTORY_MONTHS; month++) 
 		{
-			for (uint hist_type = 0; hist_type < 2; hist_type++) 
-			{
-				file->rdwr_longlong(city_history_month[month][hist_type]);
-			}
-			for (uint hist_type = 4; hist_type < 7; hist_type++) 
+			file->rdwr_longlong(city_history_month[month][0]);
+			file->rdwr_longlong(city_history_month[month][3]);
+			file->rdwr_longlong(city_history_month[month][4]);
+			for (uint hist_type = 6; hist_type < 9; hist_type++) 
 			{
 				if(hist_type == HIST_PAS_WALKED)
 				{
-					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
+					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers, and versions earlier than 12 did not record jobs or visitor demand.
 					city_history_month[month][hist_type] = 0;
 					continue;
 				}
@@ -1987,11 +1989,11 @@ void stadt_t::rdwr(loadsave_t* file)
 		// (they are now separate), so that must be handled differently.
 		for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++) 
 		{
-			for (uint hist_type = 0; hist_type < 12; hist_type++) 
+			for (uint hist_type = 0; hist_type < 14; hist_type++) 
 			{
-				if(hist_type == HIST_PAS_WALKED)
+				if(hist_type == HIST_PAS_WALKED || hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND)
 				{
-					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
+					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers, and versions earlier than 12 did not record jobs or visitor demand.
 					city_history_year[year][hist_type] = 0;
 					continue;
 				}
@@ -2000,11 +2002,11 @@ void stadt_t::rdwr(loadsave_t* file)
 		}
 		for (uint month = 0; month < MAX_CITY_HISTORY_MONTHS; month++) 
 		{
-			for (uint hist_type = 0; hist_type < 12; hist_type++) 
+			for (uint hist_type = 0; hist_type < 14; hist_type++) 
 			{
-				if(hist_type == HIST_PAS_WALKED)
+				if(hist_type == HIST_PAS_WALKED || hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND)
 				{
-					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
+					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers, and versions earlier than 12 did not record jobs or visitor demand.
 					city_history_month[month][hist_type] = 0;
 					continue;
 				}
@@ -2012,7 +2014,7 @@ void stadt_t::rdwr(loadsave_t* file)
 			}
 		}
 		// save button settings for this town
-		file->rdwr_long( stadtinfo_options);
+		file->rdwr_long(stadtinfo_options);
 	}
 	else if(file->get_experimental_version() > 0 && (file->get_experimental_version() < 3 || file->get_experimental_version() == 0))
 	{
@@ -2020,12 +2022,16 @@ void stadt_t::rdwr(loadsave_t* file)
 		
 		for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++) 
 		{
-			for (uint hist_type = 0; hist_type < MAX_CITY_HISTORY - 2; hist_type++) 
+			for (uint hist_type = 0; hist_type < adapted_max_city_history - 2; hist_type++) 
 			{
 				if(hist_type == HIST_POWER_RECIEVED)
 				{
 					city_history_year[year][HIST_POWER_RECIEVED] = 0;
 					hist_type = HIST_CONGESTION;
+				}
+				if(hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND)
+				{
+					city_history_year[year][hist_type] = 0;
 				}
 				if(hist_type == HIST_PAS_WALKED)
 				{
@@ -2038,12 +2044,16 @@ void stadt_t::rdwr(loadsave_t* file)
 		}
 		for (uint month = 0; month < MAX_CITY_HISTORY_MONTHS; month++) 
 		{
-			for (uint hist_type = 0; hist_type < MAX_CITY_HISTORY - 2; hist_type++) 
+			for (uint hist_type = 0; hist_type < adapted_max_city_history - 2; hist_type++) 
 			{
 				if(hist_type == HIST_POWER_RECIEVED)
 				{
 					city_history_month[month][HIST_POWER_RECIEVED] = 0;
 					hist_type = HIST_CONGESTION;
+				}
+				if(hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND)
+				{
+					city_history_month[month][hist_type] = 0;
 				}
 				if(hist_type == HIST_PAS_WALKED)
 				{
@@ -2055,20 +2065,10 @@ void stadt_t::rdwr(loadsave_t* file)
 			}
 		}
 		// save button settings for this town
-		file->rdwr_long( stadtinfo_options);
+		file->rdwr_long(stadtinfo_options);
 	}
 	else if(file->get_experimental_version() >= 3)
 	{
-		int adapted_max_city_history;
-		if(file->get_experimental_version() < 12)
-		{
-			// Earlier versions stored car ownership in the city history data. It is now stored in the world.
-			adapted_max_city_history = MAX_CITY_HISTORY + 1;
-		}
-		else
-		{
-			adapted_max_city_history = MAX_CITY_HISTORY;
-		}
 		for(uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++) 
 		{
 			for(uint hist_type = 0; hist_type < adapted_max_city_history; hist_type++) 
@@ -2079,16 +2079,23 @@ void stadt_t::rdwr(loadsave_t* file)
 					city_history_year[year][hist_type] = 0;
 					continue;
 				}
-				if(hist_type != LEGACY_HIST_CAR_OWNERSHIP)
+
+				if(file->get_experimental_version() < 12 && (hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND))
 				{
-					file->rdwr_longlong(city_history_year[year][hist_type]);
+					city_history_year[year][hist_type] = 0;
+					continue;
 				}
-				else
+			
+				if(file->get_experimental_version() < 12 && (hist_type == LEGACY_HIST_CAR_OWNERSHIP))
 				{
 					sint64 car_ownership_history = welt->get_finance_history_year(0, karte_t::WORLD_CAR_OWNERSHIP);
 					file->rdwr_longlong(car_ownership_history);
 					welt->set_car_ownership_history_year(year, car_ownership_history);
+					city_history_year[year][hist_type] = 0;
+					continue;
 				}
+
+				file->rdwr_longlong(city_history_year[year][hist_type]);
 			}
 		}
 		for(uint month = 0; month < MAX_CITY_HISTORY_MONTHS; month++) 
@@ -2101,16 +2108,22 @@ void stadt_t::rdwr(loadsave_t* file)
 					city_history_month[month][hist_type] = 0;
 					continue;
 				}
-				if(hist_type != LEGACY_HIST_CAR_OWNERSHIP)
+				if(file->get_experimental_version() < 12 && (hist_type == HIST_JOBS || hist_type == HIST_VISITOR_DEMAND))
 				{
-					file->rdwr_longlong(city_history_month[month][hist_type]);
+					city_history_month[month][hist_type] = 0;
+					continue;
 				}
-				else
+
+				if(file->get_experimental_version() < 12 && (hist_type == LEGACY_HIST_CAR_OWNERSHIP))
 				{
 					sint64 car_ownership_history = welt->get_finance_history_month(0, karte_t::WORLD_CAR_OWNERSHIP);
 					file->rdwr_longlong(car_ownership_history);
 					welt->set_car_ownership_history_month(month, car_ownership_history);
+					city_history_month[month][hist_type] = 0;
+					continue;
 				}
+
+				file->rdwr_longlong(city_history_month[month][hist_type]);
 			}
 		}
 		// save button settings for this town
@@ -2602,6 +2615,7 @@ void stadt_t::step(long delta_t)
 	//	next_step -= step_interval;
 	//}
 
+	// TODO: Add jobs/visitor demand (if/as appropriate)
 	// update history (might be changed due to construction/destroying of houses)
 	city_history_month[0][HIST_CITICENS] = get_einwohner();	// total number
 	city_history_year[0][HIST_CITICENS] = get_einwohner();
@@ -2629,6 +2643,7 @@ void stadt_t::roll_history()
 	for (int hist_type = 1; hist_type < MAX_CITY_HISTORY; hist_type++) {
 		city_history_month[0][hist_type] = 0;
 	}
+	// TODO: Update to account for jobs/visitor demand
 	city_history_month[0][HIST_CITICENS] = get_einwohner();
 	city_history_month[0][HIST_BUILDING] = buildings.get_count();
 	city_history_month[0][HIST_GOODS_NEEDED] = 0;
@@ -2653,9 +2668,11 @@ void stadt_t::roll_history()
 			}
 		}
 		// init this year
-		for (int hist_type = 1; hist_type < MAX_CITY_HISTORY; hist_type++) {
+		for (int hist_type = 1; hist_type < MAX_CITY_HISTORY; hist_type++)
+		{
 			city_history_year[0][hist_type] = 0;
 		}
+		// TODO: Update for jobs/visitor demand
 		city_history_year[0][HIST_CITICENS] = get_einwohner();
 		city_history_year[0][HIST_BUILDING] = buildings.get_count();
 		city_history_year[0][HIST_GOODS_NEEDED] = 0;
