@@ -1419,6 +1419,7 @@ uint16 gebaeude_t::get_jobs() const
 	if(this != this->get_first_tile()) {
 		fprintf(stderr, "get_jobs called for wrong tile\n");
 	}
+	assert(this == this->get_first_tile());
 
 	if(!is_factory)
 	{
