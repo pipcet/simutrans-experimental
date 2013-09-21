@@ -5613,7 +5613,7 @@ void karte_t::update_history()
 	finance_history_year[0][WORLD_FACTORIES] = finance_history_month[0][WORLD_FACTORIES] = fab_list.get_count();
 
 	// now step all towns (to generate passengers)
-	const sint64 bev = passenger_origins.get_sum_weight();
+	const sint64 bev = 0;
 	sint64 total_pas = 1, trans_pas = 0;
 	sint64 total_mail = 1, trans_mail = 0;
 	sint64 total_goods = 1, supplied_goods = 0;
@@ -5622,6 +5622,7 @@ void karte_t::update_history()
 	sint64 total_goods_year = 1, supplied_goods_year = 0;
 	const stadt_t* generic_city = NULL;
 	FOR(weighted_vector_tpl<stadt_t*>, const i, stadt) {
+		bev                                             += i->get_finance_history_month(0, HIST_CITICENS);
 		trans_pas					+= i->get_finance_history_month(0, HIST_PAS_TRANSPORTED);
 		total_pas					+= i->get_finance_history_month(0, HIST_PAS_GENERATED);
 		trans_mail					+= i->get_finance_history_month(0, HIST_MAIL_TRANSPORTED);
