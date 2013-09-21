@@ -118,6 +118,11 @@ public:
 	*/
 	uint8 get_index() const { return ware_index; }
 
+	bool is_passenger() const { return ware_index == 0 || ware_index == 1; }
+	bool is_tourist() const { return ware_index == 0; }
+	bool is_commuter() const { return ware_index == 1; }
+	bool is_mail() const { return ware_index == 2; }
+
 	/**
 	* @return weight in KG per unit of the good
 	* @author Hj. Malthaner

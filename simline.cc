@@ -112,6 +112,7 @@ void simline_t::create_schedule()
 		default:
 			dbg->fatal( "simline_t::create_schedule()", "Cannot create default schedule!" );
 	}
+	get_schedule()->eingabe_abschliessen();
 }
 
 

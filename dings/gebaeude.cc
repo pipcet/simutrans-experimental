@@ -73,6 +73,7 @@ void gebaeude_t::init()
 	passengers_succeeded_non_local = 0;
 	passenger_success_percent_last_year_non_local = 0;
 	available_jobs_by_time = -9223372036854775808ll;
+	commuters_in_transit = 0;
 }
 
 
@@ -145,19 +146,14 @@ gebaeude_t::gebaeude_t(karte_t *welt, koord3d pos, spieler_t *sp, const haus_til
 	if(tile->get_besch()->get_typ() == wohnung)
 	{
 		people.population = tile->get_besch()->get_population_and_visitor_demand_capacity() == 65535 ? tile->get_besch()->get_level() * welt->get_settings().get_population_per_level() : tile->get_besch()->get_population_and_visitor_demand_capacity();
-		adjusted_people.population = welt->calc_adjusted_monthly_figure(people.population);
 	}
 	else
 	{
 		people.visitor_demand = tile->get_besch()->get_population_and_visitor_demand_capacity() == 65535 ? tile->get_besch()->get_level() * welt->get_settings().get_visitor_demand_per_level() : tile->get_besch()->get_population_and_visitor_demand_capacity();
-		adjusted_people.visitor_demand = welt->calc_adjusted_monthly_figure(people.visitor_demand);
 	}
 	
 	jobs = tile->get_besch()->get_employment_capacity() == 65535 ? (is_monument() || tile->get_besch()->get_typ() == wohnung) ? 0 : tile->get_besch()->get_level() * welt->get_settings().get_jobs_per_level() : tile->get_besch()->get_employment_capacity();
 	mail_demand = tile->get_besch()->get_mail_demand_and_production_capacity() == 65535 ? is_monument() ? 0 : tile->get_besch()->get_level() * welt->get_settings().get_mail_per_level() : tile->get_besch()->get_mail_demand_and_production_capacity();
-
-	adjusted_jobs = welt->calc_adjusted_monthly_figure(jobs);
-	adjusted_mail_demand = welt->calc_adjusted_monthly_figure(mail_demand);
 
 	grund_t *gr=welt->lookup(get_pos());
 	if(gr  &&  gr->get_weg_hang()!=gr->get_grund_hang()) {
@@ -176,6 +172,7 @@ gebaeude_t::gebaeude_t(karte_t *welt, koord3d pos, spieler_t *sp, const haus_til
  */
 gebaeude_t::~gebaeude_t()
 {
+	fprintf(stderr, "destroying gebaeude %p\n", this);
 	stadt_t* our_city = get_stadt();
 	if(our_city && !welt->get_is_shutting_down()) 
 	{
@@ -237,6 +234,9 @@ void gebaeude_t::check_road_tiles(bool del)
 	vector_tpl<gebaeude_t*> building_list;
 	building_list.append(this);
 	
+	fprintf(stderr, "check_road_tiles del %d this %p <%d,%d,%d>\n",
+		del, this, pos.x, pos.y, pos.z);
+
 	for(k.y = 0; k.y < size.y; k.y ++) 
 	{
 		for(k.x = 0; k.x < size.x; k.x ++) 
@@ -266,8 +266,13 @@ void gebaeude_t::check_road_tiles(bool del)
 			koord pos_neighbour = gb->get_pos().get_2d() + (gb->get_pos().get_2d().neighbours[i]);
 			koord3d pos3d(pos_neighbour, gb->get_pos().z);
 			gr_this = welt->lookup(pos3d);
+			if(del) {
+				//gr_this = welt->lookup(pos3d.get_2d());
+			}
 			if(!gr_this)
 			{
+				fprintf(stderr, "no road at <%d,%d,%d>\n",
+					pos3d.x, pos3d.y, pos3d.z);
 				continue;
 			}
 			strasse_t* str = (strasse_t*)gr_this->get_weg(road_wt);
@@ -276,12 +281,21 @@ void gebaeude_t::check_road_tiles(bool del)
 				if(del)
 				{
 					str->connected_buildings.remove(this);
+					fprintf(stderr, "check_road_tiles del %d this %p str %p at <%d,%d,%d>\n",
+						del, this, str, pos3d.x, pos3d.y, pos3d.z);
+
 				}
 				else
 				{
+					fprintf(stderr, "connecting building %p str %p at <%d,%d,%d>\n",
+						this, str, pos3d.x, pos3d.y, pos3d.z);
 					str->connected_buildings.append_unique(this);
 				}
+			} else {
+				fprintf(stderr, "no str at <%d,%d,%d>\n",
+					pos3d.x, pos3d.y, pos3d.z);
 			}
+
 		}
 	}
 }
@@ -703,11 +717,10 @@ gebaeude_t::typ gebaeude_t::get_haustyp() const
 
 void gebaeude_t::zeige_info()
 {
+	int old_count = win_get_open_count();
 	if(get_fabrik()) {
 		ptr.fab->zeige_info();
-		return;
 	}
-	int old_count = win_get_open_count();
 	bool special = ist_firmensitz() || ist_rathaus();
 
 	if(ist_firmensitz()) {
@@ -717,10 +730,14 @@ void gebaeude_t::zeige_info()
 		welt->suche_naechste_stadt(get_pos().get_2d())->zeige_info();
 	}
 
-	if(!tile->get_besch()->ist_ohne_info()) {
-		if(!special  ||  (umgebung_t::townhall_info  &&  old_count==win_get_open_count()) ) {
+	if(1) { //!tile->get_besch()->ist_ohne_info()) {
+		if(old_count==win_get_open_count()) {
 			// open info window for the first tile of our building (not relying on presence of (0,0) tile)
 			get_first_tile()->ding_t::zeige_info();
+		}
+		if(old_count==win_get_open_count()) {
+			// open info window for the specific tile of our building
+			ding_t::zeige_info();
 		}
 	}
 }
@@ -753,13 +770,13 @@ void gebaeude_t::get_description(cbuffer_t & buf) const
 	if(is_factory && ptr.fab != NULL) 
 	{
 		buf.append(ptr.fab->get_name());
+		buf.append("\n");
 	}
-	else if(zeige_baugrube) 
+	if(zeige_baugrube) 
 	{
 		buf.append(translator::translate("Baustelle"));
 		buf.append("\n");
 	}
-	else
 	{
 		const char *desc = tile->get_besch()->get_name();
 		if(desc != NULL)
@@ -835,7 +852,7 @@ void gebaeude_t::info(cbuffer_t & buf, bool dummy) const
 
 	get_description(buf);
 
-	if(!is_factory && !zeige_baugrube) 
+	if(1) //!is_factory && !zeige_baugrube) 
 	{		
 		buf.append("\n\n");
 
@@ -855,8 +872,10 @@ void gebaeude_t::info(cbuffer_t & buf, bool dummy) const
 			buf.printf("%s%u", translator::translate("\nBauzeit bis"), h.get_retire_year_month() / 12);
 		}
 
-		buf.printf("\nTEST total jobs: %i; remaining jobs: %i", get_adjusted_jobs(), check_remaining_available_jobs());
-		
+		buf.printf("\nTEST jobs: %i/%i/%i [%i], %f per month\n", (int)get_jobs() - check_remaining_available_jobs() - commuters_in_transit, (int)commuters_in_transit, (int)(get_jobs()), check_remaining_available_jobs(), (double)(welt->calc_adjusted_monthly_figure(get_jobs_per_workday()<<16))/65536.0);
+		buf.printf("counting commuters: %d\n", welt->count_commuters_to(this->get_pos()));
+		buf.printf("gb %p ft %p\n", this, get_first_tile());
+
 		buf.append("\n");
 		if(get_besitzer()==NULL) {
 			buf.append("\n");
@@ -929,9 +948,9 @@ void gebaeude_t::info(cbuffer_t & buf, bool dummy) const
 			buf.append(translator::translate("\nNo postboxes within walking distance"));
 		}
 		
-		buf.printf("\n\n%s %i%%\n", translator::translate("Passenger success rate this year (local):"), get_passenger_success_percent_this_year_local());
+		buf.printf("\n\n%s %i%% (%i/%i)\n", translator::translate("Passenger success rate this year (local):"), get_passenger_success_percent_this_year_local(), passengers_succeeded_local, passengers_generated_local);
 		buf.printf("%s %i%%\n", translator::translate("Passenger success rate last year (local):"), get_passenger_success_percent_last_year_local());
-		buf.printf("%s %i%%\n", translator::translate("Passenger success rate this year (non-local):"), get_passenger_success_percent_this_year_non_local());
+		buf.printf("%s %i%% (%i/%i)\n", translator::translate("Passenger success rate this year (non-local):"), get_passenger_success_percent_this_year_non_local(), passengers_succeeded_non_local, passengers_generated_non_local);
 		buf.printf("%s %i%%\n", translator::translate("Passenger success rate last year (non-local):"), get_passenger_success_percent_last_year_non_local());
 	}
 }
@@ -977,6 +996,10 @@ void gebaeude_t::rdwr(loadsave_t *file)
 	if(file->get_experimental_version() >= 12)
 	{
 		file->rdwr_longlong(available_jobs_by_time);
+		file->rdwr_short(commuters_in_transit);
+		if(commuters_in_transit != welt->count_commuters_to(get_pos())) {
+			fprintf(stderr, "BIG TROUBLE\n");
+		}
 	}
 
 	if(file->is_loading()) {
@@ -1151,25 +1174,15 @@ void gebaeude_t::rdwr(loadsave_t *file)
 		if(tile->get_besch()->get_typ() == wohnung)
 		{
 			people.population = tile->get_besch()->get_population_and_visitor_demand_capacity() == 65535 ? tile->get_besch()->get_level() * welt->get_settings().get_population_per_level() : tile->get_besch()->get_population_and_visitor_demand_capacity();
-			adjusted_people.population = welt->calc_adjusted_monthly_figure(people.population);
 		}
 		else
 		{
 			people.visitor_demand = tile->get_besch()->get_population_and_visitor_demand_capacity() == 65535 ? tile->get_besch()->get_level() * welt->get_settings().get_visitor_demand_per_level() : tile->get_besch()->get_population_and_visitor_demand_capacity();
-			adjusted_people.visitor_demand = welt->calc_adjusted_monthly_figure(people.visitor_demand);
 		}
 	
 		jobs = tile->get_besch()->get_employment_capacity() == 65535 ? (is_monument() || tile->get_besch()->get_typ() == wohnung) ? 0 : tile->get_besch()->get_level() * welt->get_settings().get_jobs_per_level() : tile->get_besch()->get_employment_capacity();
 		mail_demand = tile->get_besch()->get_mail_demand_and_production_capacity() == 65535 ? is_monument() ? 0 : tile->get_besch()->get_level() * welt->get_settings().get_mail_per_level() : tile->get_besch()->get_mail_demand_and_production_capacity();
 
-		adjusted_jobs = welt->calc_adjusted_monthly_figure(jobs);
-		adjusted_mail_demand = welt->calc_adjusted_monthly_figure(mail_demand);
-
-		// Hajo: rebuild tourist attraction list
-		if(tile && tile->get_besch()->ist_ausflugsziel()) 
-		{
-			welt->add_ausflugsziel(this);
-		}
 	}
 }
 
@@ -1201,7 +1214,9 @@ void gebaeude_t::laden_abschliessen()
 #if MULTI_THREAD>1
 				pthread_mutex_lock( &add_to_city_mutex );
 #endif
-				our_city->add_gebaeude_to_stadt(this, umgebung_t::networkmode);
+				if(this == get_first_tile() && !tile->get_besch()->ist_ausflugsziel()) {
+					our_city->add_gebaeude_to_stadt(this, umgebung_t::networkmode);
+				}
 #if MULTI_THREAD>1
 				pthread_mutex_unlock( &add_to_city_mutex );
 #endif
@@ -1211,6 +1226,19 @@ void gebaeude_t::laden_abschliessen()
 			ptr.stadt = NULL;
 		}
 	}
+
+	// Hajo: rebuild tourist attraction list
+	if(tile && tile->get_besch()->ist_ausflugsziel() && this == get_first_tile()) 
+	{
+#if MULTI_THREAD>1
+		pthread_mutex_lock( &add_to_city_mutex );
+#endif
+		welt->add_ausflugsziel(this);
+#if MULTI_THREAD>1
+		pthread_mutex_unlock( &add_to_city_mutex );
+#endif
+	}
+
 }
 
 
@@ -1327,16 +1355,51 @@ sint64 gebaeude_t::calc_available_jobs_by_time() const
 {
 	// This assumes that the number of jobs for shops/offices scales with the level. This might not be the best way of doing it (shops have more visitors per job
 	// than offices, for example), but to separate this would add great complexity, not least because of the conversion between "level" and actual jobs.
-	return welt->get_zeit_ms() - welt->ticks_per_world_month;
+	if(get_jobs_per_workday() == 0) {
+		return welt->get_zeit_ms();
+	}
+	return welt->get_zeit_ms() - get_jobs() * welt->get_ticks_per_workday() / get_jobs_per_workday();
 }
 
-void gebaeude_t::set_commute_trip(uint16 number)
+void gebaeude_t::commuters_changed()
 {
-	// Record the number of arriving workers by encoding the earliest time at which new workers can arrive.
-	const sint64 total_jobs = (sint64)get_adjusted_jobs();
-	const sint64 job_ticks = ((sint64)number * welt->ticks_per_world_month) / (total_jobs < 1 ? 1 : total_jobs);
-	const sint64 new_jobs_by_time = calc_available_jobs_by_time();
-	available_jobs_by_time = max(new_jobs_by_time + job_ticks, available_jobs_by_time + job_ticks);
+	static int count_since_last_okay = 0;
+
+	if(welt->count_commuters_to(this->get_pos()) !=
+	   commuters_in_transit) {
+		count_since_last_okay++;
+	} else {
+		count_since_last_okay = 0;
+	}
+
+	if (count_since_last_okay >= 2) {
+		fprintf(stderr, "trouble %d %d\n",
+			welt->count_commuters_to(this->get_pos()), commuters_in_transit);
+	}
+}
+
+void gebaeude_t::commuters_departed(uint16 number)
+{
+	commuters_in_transit += number;
+	commuters_changed();
+}
+
+void gebaeude_t::commuters_arrived(uint16 number)
+ {
+ 	// Record the number of arriving workers by encoding the earliest time at which new workers can arrive.
+	commuters_in_transit -= number;
+	
+	const uint32 total_jobs = get_jobs_per_workday();
+	const sint64 job_ticks = (number * welt->get_ticks_per_workday()) / (total_jobs < 1 ? 1 : total_jobs);
+ 	const sint64 new_jobs_by_time = calc_available_jobs_by_time();
+ 	available_jobs_by_time = max(new_jobs_by_time + job_ticks, available_jobs_by_time + job_ticks);
+	commuters_changed();
+}
+
+void gebaeude_t::commuters_destroyed(uint16 number)
+{
+	commuters_in_transit -= number;
+	commuters_changed();
 }
 
 uint16 gebaeude_t::get_population() const
@@ -1344,9 +1407,9 @@ uint16 gebaeude_t::get_population() const
 	return get_haustyp() == wohnung ? people.population : 0;
 }
 
-uint16 gebaeude_t::get_adjusted_population() const
+uint16 gebaeude_t::get_passenger_trips_per_workday() const
 {
-	return get_haustyp() == wohnung ? adjusted_people.population : 0;
+	return get_population();
 }
 
 uint16 gebaeude_t::get_visitor_demand() const
@@ -1360,19 +1423,17 @@ uint16 gebaeude_t::get_visitor_demand() const
 	return reduced_demand > 0 ? reduced_demand : 1;
 }
 
-uint16 gebaeude_t::get_adjusted_visitor_demand() const
+uint16 gebaeude_t::get_visitor_demand_per_workday() const
 {
-	if(get_haustyp() != wohnung)
-	{
-		return adjusted_people.visitor_demand;
-	}
-
-	uint16 reduced_demand = adjusted_people.population / 5;
-	return reduced_demand > 0 ? reduced_demand : 1;
+	return get_visitor_demand();
 }
 
 uint16 gebaeude_t::get_jobs() const
 {
+	if(this != this->get_first_tile()) {
+		fprintf(stderr, "get_jobs called for wrong tile\n");
+	}
+
 	if(!is_factory)
 	{
 		return jobs;
@@ -1383,16 +1444,10 @@ uint16 gebaeude_t::get_jobs() const
 	}
 }
 
-uint16 gebaeude_t::get_adjusted_jobs() const
+uint32 gebaeude_t::get_jobs_per_workday() const
 {
-	if(!is_factory)
-	{
-		return adjusted_jobs;
-	}
-	else
-	{
-		return (uint16)get_fabrik()->get_scaled_pax_demand();
-	}
+	/* for debugging purposes, assume two commutes per workday. Reduce this to one when the code works */
+	return 2 * get_jobs();
 }
 
 uint16 gebaeude_t::get_mail_demand() const
@@ -1407,16 +1462,9 @@ uint16 gebaeude_t::get_mail_demand() const
 	}
 }
 
-uint16 gebaeude_t::get_adjusted_mail_demand() const
+uint16 gebaeude_t::get_mail_demand_per_workday() const
 {
-	if(!is_factory)
-	{
-		return adjusted_mail_demand;
-	}
-	else
-	{
-		return (uint16)get_fabrik()->get_scaled_mail_demand();
-	}
+	return get_mail_demand();
 }
 
 
@@ -1430,21 +1478,19 @@ sint32 gebaeude_t::check_remaining_available_jobs() const
 	}
 	else
 	{*/
-		const uint32 total_jobs = get_adjusted_jobs();
-		if(available_jobs_by_time < welt->get_zeit_ms() - welt->ticks_per_world_month)
-		{
-			// Uninitialised or stale - all jobs available
+		const uint32 total_jobs = get_jobs();
+		if (available_jobs_by_time == -9223372036854775808l) {
+			/* avoid overflow */
 			return total_jobs;
 		}
+
 		const sint64 delta_t = welt->get_zeit_ms() - available_jobs_by_time;
-		const sint64 remaining_jobs = delta_t * total_jobs / welt->ticks_per_world_month;
-		return (sint32)remaining_jobs;
+		const sint64 remaining_jobs = delta_t * get_jobs_per_workday() / welt->get_ticks_per_workday() - commuters_in_transit;
+		return (sint32)max(0,min(remaining_jobs, total_jobs-commuters_in_transit));
 	//}
 }
 
 bool gebaeude_t::jobs_available() const
 { 
-	const sint64 ticks = welt->get_zeit_ms();
-	bool difference = available_jobs_by_time <= ticks;
-	return difference;
+	return check_remaining_available_jobs() > 0;
 }

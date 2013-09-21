@@ -500,6 +500,16 @@ enable_home:
 			display_proportional_clip(line_x + len, pos_y, cnv->get_line()->get_name(), ALIGN_LEFT, cnv->get_line()->get_state_color(), true );
 		}
 
+		{
+			cbuffer_t buf;
+
+			cnv->get_tooltip_info(buf);
+			
+			const int pos_y = pos_y0 + 6 * LINESPACE; // line 7
+			display_proportional(pos_x, pos_y, buf, ALIGN_LEFT, COL_BLACK, true ) + 5;
+		}
+		
+		
 #ifdef DEBUG_PHYSICS
 		/*
 		 * Show braking distance

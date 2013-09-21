@@ -74,7 +74,6 @@ depot_t::depot_t(karte_t *welt, koord3d pos, spieler_t *sp, const haus_tile_besc
 	selected_filter = VEHICLE_FILTER_RELEVANT;
 	last_selected_line = linehandle_t();
 	command_pending = false;
-	add_to_world_list();
 }
 
 
@@ -206,7 +205,27 @@ void depot_t::convoi_arrived(convoihandle_t acnv, bool fpl_adjust)
 
 void depot_t::zeige_info()
 {
-	create_win( new depot_frame_t(this), w_info, (ptrdiff_t)this );
+	int old_count = win_get_open_count();
+	static int alternate = 0;
+	if(alternate++&1) {
+		create_win( new depot_frame_t(this), w_info, (ptrdiff_t)this );
+	}
+	if(win_get_open_count() == old_count) {
+		this->gebaeude_t::zeige_info();
+		const grund_t* gr = welt->lookup(get_pos());
+		if(gr)
+		{
+			for(int i = 0; i<gr->obj_count(); i++) {
+				ding_t *ding = gr->obj_bei(i);
+				if(ding != this) {
+					ding->zeige_info();
+				}
+
+			}
+			gebaeude_t* gb = gr->find<gebaeude_t>();
+			gebaeude_t::zeige_info();
+		}
+	}
 }
 
 
@@ -529,6 +548,9 @@ bool depot_t::start_convoi(convoihandle_t cnv, bool local_execution)
 		if(!cnv->get_schedule()->ist_abgeschlossen()) {
 			// close the schedule window
 			destroy_win((ptrdiff_t)cnv->get_schedule());
+		}
+		if(!cnv->get_schedule()->ist_abgeschlossen()) {
+			dbg->warning("depot_t::start_convoi()","Schedule is incomplete/not finished");
 		}
 	}
 

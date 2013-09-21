@@ -328,6 +328,7 @@ DBG_MESSAGE("haltestelle_t::remove()","removing segment from %d,%d,%d", pos.x, p
 				halt->remove_control_tower();
 				halt->recalc_status();
 			}
+			welt->remove_building_from_world_list(gb);
 			hausbauer_t::remove( welt, sp, gb );
 			bd = NULL;	// no need to recalc image
 			// removing the building could have destroyed this halt already
@@ -448,6 +449,8 @@ haltestelle_t::haltestelle_t(karte_t* wl, koord k, spieler_t* sp)
 	self = halthandle_t(this);
 	assert( !alle_haltestellen.is_contained(self) );
 	alle_haltestellen.append(self);
+	
+
 
 	last_loading_step = wl->get_steps();
 	welt = wl;
@@ -1089,7 +1092,11 @@ void haltestelle_t::step()
 
 				// Check whether these goods/passengers are waiting to go to a factory that has been deleted.
 				const grund_t* gr = welt->lookup_kartenboden(tmp.get_zielpos());
-				const gebaeude_t* const gb = gr ? gr->find<gebaeude_t>() : NULL;
+				const gebaeude_t* gb = gr ? gr->find<gebaeude_t>() : NULL;
+				if (!gb) {
+					gb = gr->get_depot();
+				}
+					
 				fabrik_t* const fab = gb ? gb->get_fabrik() : NULL;
 				if(!gb || tmp.is_freight() && !fab)
 				{
@@ -2289,7 +2296,11 @@ uint32 haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 	}
 
 	const grund_t* gr = welt->lookup_kartenboden(ware.get_zielpos());
-	const gebaeude_t* const gb = gr ? gr->find<gebaeude_t>() : NULL;
+	const gebaeude_t* gb = gr ? gr->find<gebaeude_t>() : NULL;
+	if (!gb) {
+		gb = gr->get_depot();
+	}
+					
 	fabrik_t* const fab = gb ? gb->get_fabrik() : NULL;
 	if(!gb || ware.is_freight() && !fab)
 	{
@@ -2302,24 +2313,24 @@ uint32 haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 	// FIXME: This code needs to be fixed for multi-tile buildings
 	// such as attractions and city halls, to allow access from any side
 	const planquadrat_t* plan = welt->lookup(ware.get_zielpos());
-	if(ware.get_ziel() == self && fab && (fab_list.is_contained(fab) || ((ware.get_besch() == warenbauer_t::passagiere || ware.get_besch() == warenbauer_t::post) && plan->is_connected(self))))
+	if(ware.get_ziel() == self && fab && (fab_list.is_contained(fab) || ((ware.is_passenger() || ware.is_mail()) && plan->is_connected(self))))
 	{
 		// Packet is headed to a factory;
 		// the factory exists;
 		// and the factory is considered linked to this halt.
 		// FIXME: this should be delayed by transshipment time / walking time.
-		if(ware.get_besch() != warenbauer_t::passagiere || ware.is_commuting_trip)
+		if(!ware.is_tourist())
 		{
 			// Only book arriving passengers for commuting trips.
 			// TODO: Have a proper system for recording jobs/visitors separately.
 			liefere_an_fabrik(ware);
 		}
-		if(ware.get_besch() == warenbauer_t::passagiere)
+		if(ware.is_passenger())
 		{
-			if(ware.is_commuting_trip)
+			if(ware.is_commuter())
 			{
 				gebaeude_t* gb = welt->lookup(fab->get_pos())->find<gebaeude_t>();
-				gb->set_commute_trip(ware.menge);
+				gb->commuters_arrived(ware.menge);
 			}
 			// Arriving passengers may create pedestrians
 			if(welt->get_settings().get_show_pax()) 
@@ -2346,17 +2357,25 @@ uint32 haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 	{
 		// Yes, we have.  Passengers & mail vanish mysteriously upon arrival.
 		// FIXME: walking time delay should be implemented right here!
-		if(ware.get_besch() == warenbauer_t::passagiere)
+		if(ware.is_passenger())
 		{
-			if(ware.is_commuting_trip)
+			if(ware.is_commuter())
 			{
 				const grund_t* gr = welt->lookup_kartenboden(ware.get_zielpos());
 				if(gr)
 				{
 					gebaeude_t* gb_dest = gr->find<gebaeude_t>();
+					if(!gb_dest)
+					{
+						gb_dest = gr->get_depot();
+					}
+					if(gb_dest->get_first_tile() != gb_dest) {
+						fprintf(stderr, "passengers to weird tile\n");
+					}
+						       
 					if(gb_dest)
 					{
-						gb_dest->set_commute_trip(ware.menge);
+						gb_dest->commuters_arrived(ware.menge);
 					}
 				}
 			}
@@ -3114,7 +3133,9 @@ void haltestelle_t::rdwr(loadsave_t *file)
 						 */ 
 						// if(  file->get_version() <= 112000  ) {
 							// restore intransit information
+						if(!ware.is_commuter()) {
 							fabrik_t::update_transit( ware, true );
+						}
 						// }
 					}
 					else if(  ware.menge>0  ) 
@@ -3477,7 +3498,7 @@ void haltestelle_t::laden_abschliessen(bool need_recheck_for_walking_distance)
 		check_nearby_halts();
 	}
 	
-	recalc_status();	
+	recalc_status();
 }
 
 
@@ -3519,6 +3540,7 @@ void haltestelle_t::recalc_status()
 	if(get_pax_enabled()) {
 		const uint32 max_ware = get_capacity(0);
 		total_sum += get_ware_summe(warenbauer_t::passagiere);
+		total_sum += get_ware_summe(warenbauer_t::commuters);
 		if(total_sum>max_ware) {
 			overcrowded[0] |= 1;
 		}
@@ -4266,3 +4288,27 @@ void haltestelle_t::add_waiting_time(uint16 time, halthandle_t halt, uint8 categ
 		}
 	}
 }
+
+int haltestelle_t::count_commuters_to(koord pos)
+{
+	int count = 0;
+
+	vector_tpl<ware_t> *warray = waren[0];
+	if(!warray) {
+		return 0;
+	}
+	FOR(vector_tpl<ware_t>, & ware, *warray) 
+	{
+		if(ware.is_commuter() && ware.get_zielpos() == pos) {
+			fprintf(stderr, "%d commuters at <%d,%d> %p\n",
+				ware.menge,
+				get_basis_pos().x,
+				get_basis_pos().y,
+				this);
+			count += ware.menge;
+		}
+	}
+	return count;
+}
+	
+	

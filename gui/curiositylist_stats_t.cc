@@ -63,7 +63,7 @@ class compare_curiosities
 				}
 
 				case curiositylist::by_paxlevel:
-					cmp = a->get_adjusted_visitor_demand() - b->get_adjusted_visitor_demand();
+					cmp = a->get_visitor_demand_per_workday() - b->get_visitor_demand_per_workday();
 					break;
 			}
 			return reverse ? cmp > 0 : cmp < 0;
@@ -89,7 +89,7 @@ void curiositylist_stats_t::get_unique_attractions(curiositylist::sort_mode_t sb
 	FOR(weighted_vector_tpl<gebaeude_t*>, const geb, ausflugsziele) {
 		if (geb != NULL &&
 				geb->get_first_tile() == geb &&
-				geb->get_adjusted_visitor_demand() != 0) {
+				geb->get_visitor_demand_per_workday() != 0) {
 			attractions.insert_ordered( geb, compare_curiosities(sortby, sortreverse) );
 		}
 	}

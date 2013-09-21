@@ -139,7 +139,7 @@ ifneq ($(WITH_REVISION),)
   endif
 endif
 
-CFLAGS   += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align $(FLAGS)
+CFLAGS   += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -Wno-sign-compare $(FLAGS)
 CCFLAGS  += -Wstrict-prototypes
 
 SOURCES += bauer/brueckenbauer.cc

@@ -249,7 +249,7 @@ void finance_t::book_interest_monthly() {
 		}
 		else
 		{
-			interest = (interest_rate * get_account_balance()) / 4800ll;
+		         interest = 0; // (interest_rate * get_account_balance()) / 4800ll;
 		}
 
 		com_year[0][ATC_INTEREST] += interest;

@@ -25,6 +25,7 @@ private:
 	static vector_tpl<ware_besch_t *> waren;
 
 	static ware_besch_t *load_passagiere;
+	static ware_besch_t *load_commuters;
 	static ware_besch_t *load_post;
 	static ware_besch_t *load_nichts;
 
@@ -32,9 +33,10 @@ private:
 	static uint8 max_catg_index;
 
 public:
-	enum { INDEX_PAS=0, INDEX_MAIL=1, INDEX_NONE=2 };
+	enum { INDEX_PAS=0, INDEX_COMMUTERS=1, INDEX_MAIL=2, INDEX_NONE=3 };
 
 	static const ware_besch_t *passagiere;
+	static const ware_besch_t *commuters;
 	static const ware_besch_t *post;
 	static const ware_besch_t *nichts; //"Nothing".
 

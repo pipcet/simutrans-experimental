@@ -500,6 +500,8 @@ public:
 
 	const char * get_fracht_mass() const;
 
+	void get_tooltip_info(cbuffer_t & buf) const;
+
 	/**
 	* erstellt einen Info-Text zur Fracht, z.B. zur Darstellung in einem
 	* Info-Fenster

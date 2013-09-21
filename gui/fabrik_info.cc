@@ -164,7 +164,7 @@ void fabrik_info_t::zeichnen(koord pos, koord gr)
 
 	prod_buf.clear();
 	prod_buf.append( translator::translate("Durchsatz") );
-	prod_buf.append( fab->get_current_production(), 0 );
+	prod_buf.append( fab->get_current_production_per_month(), 0 );
 	prod_buf.append( translator::translate("units/day") );
 
 	unsigned indikatorfarbe = fabrik_t::status_to_color[fab->get_status()];

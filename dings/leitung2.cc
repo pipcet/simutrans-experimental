@@ -104,7 +104,7 @@ leitung_t::leitung_t(karte_t *welt, typ type, loadsave_t *file) : ding_t(welt, t
 	set_net(NULL);
 	ribi = ribi_t::keine;
 	rdwr(file);
-	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T);
+	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T) + 1;
 }
 
 leitung_t::leitung_t(karte_t *welt, loadsave_t *file) : ding_t(welt, ding_t::leitung)
@@ -117,7 +117,7 @@ leitung_t::leitung_t(karte_t *welt, loadsave_t *file) : ding_t(welt)
 	set_net(NULL);
 	ribi = ribi_t::keine;
 	rdwr(file);
-	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T);
+	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T) + 1;
 }
 
 
@@ -129,7 +129,7 @@ leitung_t::leitung_t(karte_t *welt, typ type, koord3d pos, spieler_t *sp) : ding
 	set_net(NULL);
 	set_besitzer( sp );
 	set_besch(wegbauer_t::leitung_besch);
-	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T);
+	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T) + 1;
 }
 
 leitung_t::leitung_t(karte_t *welt, koord3d pos, spieler_t *sp) : ding_t(welt, ding_t::leitung, pos)
@@ -142,7 +142,7 @@ leitung_t::leitung_t(karte_t *welt, koord3d pos, spieler_t *sp) : ding_t(welt, p
 	set_net(NULL);
 	set_besitzer( sp );
 	set_besch(wegbauer_t::leitung_besch);
-	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T);
+	modified_production_delta_t = welt->calc_adjusted_monthly_figure(PRODUCTION_DELTA_T) + 1;
 }
 
 

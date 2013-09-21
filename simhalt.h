@@ -901,6 +901,9 @@ public:
 	* Calculate the transfer and transshipment time values.
 	*/
 	void calc_transfer_time();
+
+	int count_commuters_to(koord pos);
+
 };
 
 ENUM_BITSET(haltestelle_t::stationtyp)

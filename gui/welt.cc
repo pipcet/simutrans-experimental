@@ -114,7 +114,7 @@ welt_gui_t::welt_gui_t(karte_t* const welt, settings_t* const sets) :
 	// select map stuff ..
 	inp_map_number.init( abs(sets->get_karte_nummer()), 0, 0x7FFFFFFF, 1, true );
 	inp_map_number.set_pos(koord(LEFT_ARROW, intTopOfButton));
-	inp_map_number.set_groesse(koord(RIGHT_ARROW-LEFT_ARROW+10, 12));
+	inp_map_number.set_groesse(koord(RIGHT_COLUMN_WIDTH+10, 12));
 	inp_map_number.add_listener( this );
 	add_komponente( &inp_map_number );
 	intTopOfButton += 12;

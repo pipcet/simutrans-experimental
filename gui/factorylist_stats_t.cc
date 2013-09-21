@@ -205,7 +205,7 @@ void factorylist_stats_t::zeichnen(koord offset)
 			}
 			buf.append(", ");
 
-			buf.append(fab->get_current_production(),0);
+			buf.append(fab->get_current_production_per_month(),0);
 			buf.append(") ");
 
 

@@ -335,8 +335,8 @@ void factory_chart_t::zeichnen(koord pos)
 {
 	// update reference lines' data (these might change over time)
 	prod_ref_line_data[FAB_REF_DEMAND_ELECTRIC] = ( factory->get_besch()->is_electricity_producer() ? 0 : factory->get_scaled_electric_amount() );
-	prod_ref_line_data[FAB_REF_DEMAND_PAX] = factory->get_scaled_pax_demand();
-	prod_ref_line_data[FAB_REF_DEMAND_MAIL] = factory->get_scaled_mail_demand();
+	prod_ref_line_data[FAB_REF_DEMAND_PAX] = factory->get_pax_demand_per_month();
+	prod_ref_line_data[FAB_REF_DEMAND_MAIL] = factory->get_mail_demand_per_month();
 
 	gui_container_t::zeichnen( pos );
 }

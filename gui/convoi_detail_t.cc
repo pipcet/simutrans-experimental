@@ -414,6 +414,15 @@ void gui_vehicleinfo_t::zeichnen(koord offset)
 				display_proportional_clip( pos.x+w+offset.x, pos.y+offset.y+total_height+extra_y, buf, ALIGN_LEFT, COL_BLACK, true );
 				extra_y += LINESPACE;
 			}
+			
+			//Bidirectional?
+			if(v->get_besch()->is_bidirectional())
+			{
+				buf.clear();
+				buf.printf("%s", translator::translate("This is a bidirectional vehicle\n"));
+				display_proportional_clip( pos.x+w+offset.x, pos.y+offset.y+total_height+extra_y, buf, ALIGN_LEFT, COL_BLACK, true );
+				extra_y += LINESPACE;
+			}
 
 			// friction
 			if (v->get_frictionfactor() != 1)

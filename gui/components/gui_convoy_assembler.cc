@@ -795,11 +795,11 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 			int loks = 0, waggons = 0, pax=0, electrics = 0;
 			FOR(slist_tpl<vehikel_besch_t *>, const info, vehikelbauer_t::get_info(way_type)) 
 			{
-				if(  info->get_engine_type() == vehikel_besch_t::electric  &&  (info->get_ware()==warenbauer_t::passagiere  ||  info->get_ware()==warenbauer_t::post)) 
+				if(  info->get_engine_type() == vehikel_besch_t::electric  &&  info->get_ware() && (info->get_ware()->is_passenger() ||  info->get_ware()->is_mail())  ) 
 				{
 					electrics++;
 				}
-				else if(info->get_ware()==warenbauer_t::passagiere  ||  info->get_ware()==warenbauer_t::post) 
+				else if(info->get_ware() && (info->get_ware()->is_passenger() || info->get_ware()->is_mail()))
 				{
 					pax++;
 				}
@@ -1913,6 +1913,16 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(koord pos)
 		if(veh_type->get_tilting())
 		{
 			n += sprintf(buf + n, "%s", translator::translate("This is a tilting vehicle\n"));
+		}
+
+		if(veh_type->is_bidirectional())
+		{
+			n += sprintf(buf + n, "%s", translator::translate("This is a bidirectional vehicle\n"));
+		}
+
+		if(veh_type->get_can_lead_from_rear())
+		{
+			n += sprintf(buf + n, "%s", translator::translate("This can be at rear\n"));
 		}
 
 		if(veh_type->get_waytype() == air_wt)

@@ -11,7 +11,7 @@
 
 #include "grund.h"
 #include "fundament.h"
-
+#include "../simworld.h"
 
 fundament_t::fundament_t(karte_t *welt, loadsave_t *file, koord pos ) : grund_t(welt, koord3d(pos,0) )
 {

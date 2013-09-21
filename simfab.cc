@@ -250,11 +250,27 @@ void fabrik_t::arrival_statistics_t::book_arrival(const uint16 amount)
 
 void fabrik_t::update_transit( const ware_t& ware, bool add )
 {
-	if(  ware.index > warenbauer_t::INDEX_NONE  ) {
+	if(  ware.is_freight()  ) {
 		// only for freights
 		fabrik_t *fab = get_fab( welt, ware.get_zielpos() );
 		if(  fab  ) {
 			fab->update_transit_intern( ware, add );
+		}
+	}
+
+	if(ware.is_commuter()) {
+		grund_t *gr = welt->lookup_kartenboden(ware.get_zielpos());
+		if(gr)
+		{
+			gebaeude_t *gb = gr->find<gebaeude_t>();
+			if(gb)
+			{
+				if(add) {
+					gb->commuters_departed(ware.menge);
+				} else {
+					gb->commuters_destroyed(ware.menge);
+				}
+			}
 		}
 	}
 }
@@ -307,7 +323,7 @@ void fabrik_t::book_weighted_sums(sint64 delta_time)
 	}
 
 	// production level
-	const sint32 current_prod = get_current_production();
+	const sint32 current_prod = get_current_production_per_month();
 	weighted_sum_production += current_prod * delta_time;
 	set_stat( current_prod, FAB_PRODUCTION );
 
@@ -355,7 +371,7 @@ void fabrik_t::update_scaled_pax_demand()
 		// formula : base_pax_demand * (current_production_base / besch_production_base); (prod >> 1) is for rounding
 		const uint32 pax_demand = (uint32)( ( base_pax_demand * (sint64)prodbase + (prod >> 1) ) / prod );
 		// then, scaling based on month length
-		scaled_pax_demand = max(welt->calc_adjusted_monthly_figure(pax_demand), 1);
+	        pax_demand_per_workday = pax_demand;
 
 		// pax demand for fixed period length
 		// It is intended that pax_demand, not scaled_pax_demand be used here despite the method name.
@@ -382,7 +398,7 @@ void fabrik_t::update_scaled_mail_demand()
 		// formula : besch_mail_demand * (current_production_base / besch_production_base); (prod >> 1) is for rounding
 		const uint32 mail_demand = (uint32)( ( base_mail_demand * (sint64)prodbase + (prod >> 1) ) / prod );
 		// then, scaling based on month length
-		scaled_mail_demand = max(welt->calc_adjusted_monthly_figure(mail_demand), 1);
+		mail_demand_per_workday = mail_demand;
 
 		// mail demand for fixed period length
 		// It is intended that mail_demand, not scaled_mail_demand be used here despite the method name
@@ -706,6 +722,7 @@ fabrik_t::fabrik_t(karte_t* wl, loadsave_t* file)
 			for(  sint16 x=0;  x<besch->get_haus()->get_b(rotate);  x++  ) {
 				gebaeude_t *gb = welt->lookup_kartenboden( pos_origin.get_2d()+koord(x,y) )->find<gebaeude_t>();
 				if(  gb  ) {
+					gb->set_fab(this);
 					gb->add_alter(10000ll);
 				}
 			}
@@ -974,7 +991,7 @@ void fabrik_t::baue(sint32 rotate, bool build_fields, bool force_initial_prodbas
 	}
 	pos = building->get_pos();
 	pos_origin.z = pos.z;
-
+		
 	if(besch->get_field_group()) {
 		// if there are fields
 		if(  !fields.empty()  ) {
@@ -1014,7 +1031,6 @@ void fabrik_t::baue(sint32 rotate, bool build_fields, bool force_initial_prodbas
 		}
 	}
 }
-
 
 /* field generation code
  * @author Kieron Green
@@ -1468,12 +1484,25 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 
 	if(file->get_experimental_version() >= 12)
 	{
+		koord k(0,0);
+		for(  sint16 y=0;  y<besch->get_haus()->get_h(rotate);  y++  ) {
+			for(  sint16 x=0;  x<besch->get_haus()->get_b(rotate);  x++  ) {
+				gebaeude_t *gb = welt->lookup_kartenboden( pos_origin.get_2d()+koord(x,y) )->find<gebaeude_t>();
+				if(  gb  ) {
+					fprintf(stderr, "fab %p gb %p\n",
+						this, gb);
+					gb->set_fab(this);
+				}
+			}
+		}
+		
 		grund_t *gr = welt->lookup(pos_origin);
 		gebaeude_t *gb = gr->find<gebaeude_t>();
 		
 		building = gb;
 		building->set_fab(this);
 	}
+	
 }
 
 
@@ -1557,7 +1586,7 @@ sint32 fabrik_t::vorrat_an(const ware_besch_t *typ)
 
 sint32 fabrik_t::liefere_an(const ware_besch_t *typ, sint32 menge)
 {
-	if(  typ==warenbauer_t::passagiere  ) {
+	if(  typ->is_passenger()  ) {
 		// book pax arrival and recalculate pax boost
 		book_stat(menge, FAB_PAX_ARRIVED);
 		arrival_stats_pax.book_arrival(menge);
@@ -1598,7 +1627,7 @@ sint8 fabrik_t::is_needed(const ware_besch_t *typ) const
 	FOR(array_tpl<ware_production_t>, const& i, eingang) {
 		if(  i.get_typ() == typ  ) {
 			// not needed (false) if overflowing or too much already sent
-			const bool transit_ok = welt->get_settings().get_factory_maximum_intransit_percentage() == 0 ? true : (i.transit * 100) < ((i.max >> fabrik_t::precision_bits) * welt->get_settings().get_factory_maximum_intransit_percentage());
+			const bool transit_ok = welt->get_settings().get_factory_maximum_intransit_percentage() == 0 ? true : (i.transit * 100 + i.menge * 100) < ((i.max >> fabrik_t::precision_bits) * welt->get_settings().get_factory_maximum_intransit_percentage());
 			return (i.menge < i.max)  &&  transit_ok;
 		}
 	}
@@ -1923,7 +1952,7 @@ void fabrik_t::verteile_waren(const uint32 produkt)
 			if(  ziel_fab  ) {
 				const sint8 needed = ziel_fab->is_needed(ausgang[produkt].get_typ());
 				if(  needed>=0  ) {
-					ware_t ware(ausgang[produkt].get_typ(), nearby_halt.halt);
+					ware_t ware(ausgang[produkt].get_typ(), nearby_halt.halt, get_pos());
 					ware.menge = menge;
 					ware.set_zielpos( lieferziel );
 					ware.arrival_time = welt->get_zeit_ms();
@@ -2067,7 +2096,7 @@ void fabrik_t::neuer_monat()
 	aggregate_weight = 0;
 
 	// restore the current values
-	set_stat( get_current_production(), FAB_PRODUCTION );
+	set_stat( get_current_production_per_month(), FAB_PRODUCTION );
 	set_stat( prodfactor_electric, FAB_BOOST_ELECTRIC );
 	set_stat( prodfactor_pax, FAB_BOOST_PAX );
 	set_stat( prodfactor_mail, FAB_BOOST_MAIL );
@@ -2435,7 +2464,7 @@ void fabrik_t::info_prod(cbuffer_t& buf) const
 {
 	buf.clear();
 	buf.append( translator::translate("Durchsatz") );
-	buf.append( get_current_production(), 0 );
+	buf.append( get_current_production_per_month(), 0 );
 	buf.append( translator::translate("units/day") );
 	buf.append( "\n" );
 	if(get_besch()->is_electricity_producer())
@@ -2502,6 +2531,11 @@ void fabrik_t::info_prod(cbuffer_t& buf) const
 				(sint32)(0.5+(besch->get_lieferant(index)->get_verbrauch()*100l)/256.0)
 			);
 		}
+	}
+	
+	buf.printf("\n");
+	if (get_building()) {
+		get_building()->info(buf, false);
 	}
 }
 
@@ -2712,7 +2746,6 @@ void fabrik_t::laden_abschliessen()
 	// set production, update all production related numbers
 	set_base_production( max(prodbase, prodbase_adjust) );
 	mark_connected_roads(false);
-
 	add_to_world_list();
 }
 

@@ -578,6 +578,7 @@ public:
 	sint32 get_einwohner() const {return ((buildings.get_sum_weight() * welt->get_settings().get_meters_per_tile()) / 31)+((2*bev-arb-won)>>1);}
 
 	uint32 get_buildings()  const { return buildings.get_count(); }
+	bool can_shrink() const { return buildings.get_count() > 5; }
 	sint32 get_unemployed() const { return bev - arb; }
 	sint32 get_homeless()   const { return bev - won; }
 
@@ -796,6 +797,8 @@ public:
 	// Checks whether any given postition is within the city limits.
 	bool is_within_city_limits(koord k) const;
 
+	koord distance_to_city_limits(koord k) const;
+	
 	/**
 	 * Erzeugt ein Array zufaelliger Startkoordinaten,
 	 * die fuer eine Stadtgruendung geeignet sind.

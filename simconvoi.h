@@ -1110,6 +1110,9 @@ private:
 	void info(cbuffer_t & buf, bool dummy = false) const;
 public:
 #endif
+	void get_tooltip_info(cbuffer_t & buf);
+
+	
 	/**
 	* @param buf the buffer to fill
 	* @return Freight dscription text (buf)
@@ -1402,6 +1405,9 @@ public:
 	 * its shcedule.
 	 */
 	void clear_departures();
+
+	int count_commuters_to(koord pos);
+
 };
 
 #endif

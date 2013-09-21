@@ -108,19 +108,12 @@ private:
 		uint16 visitor_demand;
 	} people;
 
-	union adjusted_people_t
-	{
-		uint16 population;
-		uint16 visitor_demand;
-	} adjusted_people;
-
 	/** 
 	 * Stores the dynamic number of jobs in this building
-	 * at present. This is the fully adjusted figure, 
-	 * representing commuters to be demanded per game month.
+	 * at present. By default, jobs == jobs_per_workday.
 	 */
 	uint16 jobs;
-	uint16 adjusted_jobs;
+	uint32 jobs_per_workday;
 
 	/** 
 	 * Stores the dynamic level of mail demand in this building
@@ -158,6 +151,8 @@ private:
 	* @author: jamespetts
 	*/
 	sint64 available_jobs_by_time;
+
+	uint16 commuters_in_transit;
 
 #ifdef INLINE_DING_TYPE
 protected:
@@ -276,6 +271,7 @@ public:
 	const haus_tile_besch_t *get_tile() const { return tile; }
 
 	virtual void zeige_info();
+	void zeige_info2();
 
 	void entferne(spieler_t *sp);
 
@@ -313,19 +309,21 @@ public:
 	* Pass the number of passengers being sent.
 	* @author: jamespetts, August 2013
 	*/
-	void set_commute_trip(uint16 number);
+	void commuters_arrived(uint16 number);
+	void commuters_departed(uint16 number);
+	void commuters_destroyed(uint16 number);
 
 	uint16 get_population() const;
-	uint16 get_adjusted_population() const;
+	uint16 get_passenger_trips_per_workday() const;
 
 	uint16 get_visitor_demand() const;
-	uint16 get_adjusted_visitor_demand() const;
+	uint16 get_visitor_demand_per_workday() const;
 
 	uint16 get_jobs() const;
-	uint16 get_adjusted_jobs() const;
+	uint32 get_jobs_per_workday() const;
 
 	uint16 get_mail_demand() const;
-	uint16 get_adjusted_mail_demand() const;
+	uint16 get_mail_demand_per_workday() const;
 
 	bool jobs_available() const;
 
@@ -337,6 +335,8 @@ private:
 	* Note: this is measured in *adjusted* jobs.
 	*/
 	sint32 check_remaining_available_jobs() const;
+	
+	void commuters_changed();
 };
 
 

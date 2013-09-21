@@ -1575,7 +1575,7 @@ end_loop:
 		case NO_ROUTE:
 			// stuck vehicles
 			no_route_retry_count ++;
-			if(no_route_retry_count >= 3)
+			if(no_route_retry_count >= 99)
 			{
 				// If the convoy is stuck for too long, send it to a depot.
 				emergency_go_to_depot();
@@ -3993,6 +3993,17 @@ void convoi_t::set_sortby(uint8 sort_order)
 }
 
 
+void convoi_t::get_tooltip_info(cbuffer_t & buf)
+{
+	if(anz_vehikel >= 1) {
+		fahr[0]->get_tooltip_info(buf);
+	}
+	if(fpl && !fpl->ist_abgeschlossen()) {
+		buf.append(". not abgeschlossen");
+	}
+}
+
+
 // caches the last info; resorts only when needed
 void convoi_t::get_freight_info(cbuffer_t & buf)
 {
@@ -4921,8 +4932,8 @@ void convoi_t::hat_gehalten(halthandle_t halt)
 			sint64 go_on_ticks_spacing = WAIT_INFINITE;
 			if (line.is_bound() && fpl->get_spacing() && line->count_convoys()) 
 			{
-				// Spacing cnv/month
-				uint32 spacing = welt->ticks_per_world_month/fpl->get_spacing();
+				// Spacing cnv/workday
+				uint32 spacing = welt->get_ticks_per_workday()/fpl->get_spacing();
 				uint32 spacing_shift = fpl->get_current_eintrag().spacing_shift * welt->ticks_per_world_month / welt->get_settings().get_spacing_shift_divisor();
 				sint64 wait_from_ticks = ((welt->get_zeit_ms() - spacing_shift) / spacing) * spacing + spacing_shift; // remember, it is integer division
 				int queue_pos = halt.is_bound() ? halt->get_queue_pos(self) : 1;
@@ -4932,7 +4943,7 @@ void convoi_t::hat_gehalten(halthandle_t halt)
 			if(fpl->get_current_eintrag().waiting_time_shift > 0)
 			{
 				// Max. wait for load
-				go_on_ticks_waiting = welt->get_zeit_ms() + (welt->ticks_per_world_month >> (16 - fpl->get_current_eintrag().waiting_time_shift)) - reversing_time;
+				go_on_ticks_waiting = welt->get_zeit_ms() + (welt->get_ticks_per_workday() >> (16 - fpl->get_current_eintrag().waiting_time_shift)) - reversing_time;
 			}
 			go_on_ticks = (std::min)(go_on_ticks_spacing, go_on_ticks_waiting);
 			go_on_ticks = (std::max)(departure_time, go_on_ticks);
@@ -6142,7 +6153,7 @@ void convoi_t::snprintf_remaining_loading_time(char *p, size_t size) const
 	
 	sint32 remaining_ticks;
 
-	if (go_on_ticks != WAIT_INFINITE && go_on_ticks >= current_ticks)
+	if (go_on_ticks != WAIT_INFINITE)// && go_on_ticks >= current_ticks)
 	{
 		remaining_ticks = (sint32)(go_on_ticks - current_ticks);
 	} 
@@ -6158,7 +6169,7 @@ void convoi_t::snprintf_remaining_loading_time(char *p, size_t size) const
 
 	uint32 ticks_left = 0;
 
-	if(remaining_ticks >= 0)
+	if(1 || remaining_ticks >= 0)
 	{
 		ticks_left = remaining_ticks;
 	}
@@ -6170,13 +6181,7 @@ void convoi_t::snprintf_remaining_loading_time(char *p, size_t size) const
  */
 void convoi_t::snprintf_remaining_reversing_time(char *p, size_t size) const
 {
-	const sint32 remaining_ticks = (sint32)(departures->get(last_stop_id).departure_time - welt->get_zeit_ms());
-	uint32 ticks_left = 0;
-	if(remaining_ticks >= 0)
-	{
-		ticks_left = remaining_ticks;
-	}
-	welt->sprintf_ticks(p, size, ticks_left);
+	welt->sprintf_ticks(p, size, wait_lock);
 }
 
 uint32 convoi_t::calc_highest_axle_load()
@@ -6645,3 +6650,22 @@ float32e8_t convoi_t::get_power_summary(const float32e8_t &speed /* in m/s */)
 	return power_index_to_power(power, get_welt()->get_settings().get_global_power_factor_percent());
 }
 // BG, 31.12.2012: end of virtual methods of lazy_convoy_t
+
+int convoi_t::count_commuters_to(koord pos)
+{
+	int count = 0;
+
+	for(uint8 i = 0; i < anz_vehikel; i++) 
+	{
+		FOR(slist_tpl< ware_t>, const& iter, fahr[i]->get_fracht()) 
+		{	
+			if(iter.is_commuter() && iter.get_zielpos() == pos) {
+				fprintf(stderr, "%d commuters in convoy %p\n",
+					iter.menge, this);
+				count += iter.menge;
+			}
+		}
+	}
+
+	return count;
+}	

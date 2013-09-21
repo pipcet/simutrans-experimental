@@ -170,9 +170,9 @@ static bool passes_filter_out(haltestelle_t const& s)
 		ware_besch_t const* const ware = warenbauer_t::get_info(i);
 		if (!halt_list_frame_t::get_ware_filter_ab(ware)) continue;
 
-		if (ware == warenbauer_t::passagiere) {
+		if (ware->is_passenger()) {
 			if (s.get_pax_enabled()) return true;
-		} else if (ware == warenbauer_t::post) {
+		} else if (ware->is_mail()) {
 			if (s.get_post_enabled()) return true;
 		} else if (ware != warenbauer_t::nichts) {
 			// Oh Mann - eine doppelte Schleife und das noch pro Haltestelle
@@ -205,9 +205,9 @@ static bool passes_filter_in(haltestelle_t const& s)
 		ware_besch_t const* const ware = warenbauer_t::get_info(i);
 		if (!halt_list_frame_t::get_ware_filter_an(ware)) continue;
 
-		if (ware == warenbauer_t::passagiere) {
+		if (ware->is_passenger()) {
 			if (s.get_pax_enabled()) return true;
-		} else if (ware == warenbauer_t::post) {
+		} else if (ware->is_mail()) {
 			if (s.get_post_enabled()) return true;
 		} else if (ware != warenbauer_t::nichts) {
 			// Oh Mann - eine doppelte Schleife und das noch pro Haltestelle

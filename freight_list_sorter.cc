@@ -238,7 +238,7 @@ void freight_list_sorter_t::sort_freight(vector_tpl<ware_t> const& warray, cbuff
 			if(  last_ware_index!=ware.get_index()  &&  last_ware_catg!=ware.get_catg()  ) {
 				sint32 sum = 0;
 				last_ware_index = ware.get_index();
-				last_ware_catg = (ware.get_catg()!=0) ? ware.get_catg() : -1;
+				last_ware_catg = ware.get_catg();
 				for(  int i=j;  i<pos;  i++  ) {
 					ware_t const& sumware = wlist[i];
 					if(  last_ware_index != sumware.get_index()  ) {
@@ -249,8 +249,7 @@ void freight_list_sorter_t::sort_freight(vector_tpl<ware_t> const& warray, cbuff
 					sum += sumware.menge;
 				}
 
-				// special freight => handle different
-				last_ware_catg = (ware.get_catg()!=0) ? ware.get_catg() : -1;
+				last_ware_catg = ware.get_catg();
 
 				// display all ware
 				if(full_list == NULL || full_list->get_count() == 0) {
@@ -307,15 +306,13 @@ void freight_list_sorter_t::sort_freight(vector_tpl<ware_t> const& warray, cbuff
 					town_name = city->get_name();
 				}
 
-				const char* trip_type = (ware.is_commuting_trip ? translator::translate("commuting") : translator::translate("visiting"));
-
 				if(city && ware.is_passenger())
 				{
-					buf.printf("%s <%i, %i> (%s; %s)\n        ", (factory ? factory->get_name() : description), ware.get_zielpos().x, ware.get_zielpos().y, town_name, trip_type);
+					buf.printf("%s <%i, %i> (%s)\n        ", (factory ? factory->get_name() : description), ware.get_zielpos().x, ware.get_zielpos().y, town_name);
 				}
 				else if(ware.is_passenger())
 				{
-					buf.printf("%s <%i, %i> (%s)\n        ", (factory ? factory->get_name() : description), ware.get_zielpos().x, ware.get_zielpos().y, trip_type);
+					buf.printf("%s <%i, %i>\n        ", (factory ? factory->get_name() : description), ware.get_zielpos().x, ware.get_zielpos().y);
 				}
 				else if(city)
 				{
@@ -344,7 +341,7 @@ void freight_list_sorter_t::sort_freight(vector_tpl<ware_t> const& warray, cbuff
 				{
 					origin_name = origin_halt->get_name();
 				}
-				buf.printf(origin_name);
+				buf.printf("%s <%i,%i>", origin_name, ware.get_origin_pos().x, ware.get_origin_pos().y);
 			}
 			
 			if(via_halt != halt && (sortby == by_via || sortby == by_via_sum))
@@ -364,7 +361,7 @@ void freight_list_sorter_t::sort_freight(vector_tpl<ware_t> const& warray, cbuff
 					origin_name = origin_halt->get_name();
 				}
 
-				buf.printf(translator::translate(" from %s"), origin_name);
+				buf.printf(translator::translate(" from %s <%i,%i>"), origin_name, ware.get_origin_pos().x, ware.get_origin_pos().y);
 			}
 
 			buf.append("\n");

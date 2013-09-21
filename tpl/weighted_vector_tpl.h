@@ -406,7 +406,7 @@ template<class T> class weighted_vector_tpl
 				}
 			}
 #endif
-			//DBG_DEBUG("at_weight()", "target_weight=%i found_weight=%i at pos %i", target_weight, weight_at(pos), pos);
+			DBG_DEBUG("at_weight()", "target_weight=%i found_weight=%i at pos %i", target_weight, weight_at(pos), pos);
 			return nodes[pos].data;
 		}
 

@@ -23,11 +23,7 @@ public:
 	uint32 index: 8;
 
 	/// amount of goods
-	uint32 menge : 23;
-
-	// Necessary to determine whether to book 
-	// jobs taken on arrival.
-	bool is_commuting_trip : 1;
+	uint32 menge : 24;
 
 private:
 	/**
@@ -56,6 +52,9 @@ private:
 	halthandle_t last_transfer;
 
 	/**
+	 * The position of the actual building that we originated at */
+	koord origin_pos;
+	/**
 	 * Target position (factory, etc)
 	 * 
 	 * "the final target position, which is on behalf 
@@ -81,11 +80,14 @@ public:
 	koord get_zielpos() const { return zielpos; }
 	void set_zielpos(const koord zielpos) { this->zielpos = zielpos; }
 
-	void reset() { menge = 0; ziel = zwischenziel = origin = last_transfer = halthandle_t(); zielpos = koord::invalid; }
+	koord get_origin_pos() const { return origin_pos; }
+	void set_origin_pos(const koord zielpos) { this->origin_pos = zielpos; }
+
+	void reset() { menge = 0; ziel = zwischenziel = origin = last_transfer = halthandle_t(); origin_pos = zielpos = koord::invalid; }
 
 	ware_t();
 	ware_t(const ware_besch_t *typ);
-	ware_t(const ware_besch_t *typ, halthandle_t o);
+	ware_t(const ware_besch_t *typ, halthandle_t o, koord pos);
 	ware_t(karte_t *welt,loadsave_t *file);
 
 	/**
@@ -112,9 +114,11 @@ public:
 	void laden_abschliessen(karte_t *welt,spieler_t *sp);
 
 	// find out the category ...
-	bool is_passenger() const { return index == 0; }
-	bool is_mail() const { return index == 1; }
-	bool is_freight() const { return index > 2; }
+	bool is_passenger() const { return index == 0 || index == 1; }
+	bool is_tourist() const { return index == 0; }
+	bool is_commuter() const { return index == 1; }
+	bool is_mail() const { return index == 2; }
+	bool is_freight() const { return index > 3; }
 
 	// The time at which this packet arrived at the current station
 	// @author: jamespetts

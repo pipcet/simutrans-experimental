@@ -31,6 +31,7 @@ ware_t::ware_t() : ziel(), zwischenziel(), zielpos(-1, -1)
 	menge = 0;
 	index = 0;
 	arrival_time = 0;
+	origin_pos = koord::invalid;
 }
 
 
@@ -39,16 +40,18 @@ ware_t::ware_t(const ware_besch_t *wtyp) : ziel(), zwischenziel(), zielpos(-1, -
 	//This constructor is called from simcity.cc
 	menge = 0;
 	index = wtyp->get_index();
+	origin_pos = koord::invalid;
 	arrival_time = 0;
 }
 
 // Constructor for new revenue system: packet of cargo keeps track of its origin.
 //@author: jamespetts
-ware_t::ware_t(const ware_besch_t *wtyp, halthandle_t o) : ziel(), zwischenziel(), zielpos(-1, -1)
+ware_t::ware_t(const ware_besch_t *wtyp, halthandle_t o, koord pos) : ziel(), zwischenziel(), zielpos(-1, -1)
 {
 	menge = 0;
 	index = wtyp->get_index();
 	origin = o;
+	origin_pos = pos;
 	arrival_time = 0;
 }
 
@@ -121,6 +124,11 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 				halt_id = origin.is_bound() ? origin.get_id() : 0;	
 				file->rdwr_short(halt_id);
 			}	
+			if(file->get_experimental_version() >= 12)
+			{
+				fprintf(stderr, "saved %d,%d\n", origin_pos.x, origin_pos.y);
+				origin_pos.rdwr(file);
+			}
 		}
 
 		else
@@ -139,6 +147,11 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 			{
 				origin = zwischenziel;
 			}
+
+				if(file->get_experimental_version() >= 12)
+				{
+					origin_pos.rdwr(file);
+					fprintf(stderr, "loaded %d,%d\n", origin_pos.x, origin_pos.y);}
 		}
 	}
 	else 
@@ -153,6 +166,11 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 			{
 				koord origin_koord = origin.is_bound() ? origin->get_basis_pos() : koord::invalid;	
 				origin_koord.rdwr(file);
+			}
+			if(file->get_experimental_version() >= 12)
+			{
+				fprintf(stderr, "saved %d,%d\n", origin_pos.x, origin_pos.y);
+				origin_pos.rdwr(file);
 			}
 		}
 		else 
@@ -180,7 +198,12 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 				}
 			
 				origin = welt->get_halt_koord_index(origin_koord);
-			
+
+				origin_pos = koord::invalid;
+				if(file->get_experimental_version() >= 12)
+				{
+					origin_pos.rdwr(file);
+					fprintf(stderr, "loaded %d,%d\n", origin_pos.x, origin_pos.y);}
 			}
 			else
 			{
@@ -240,9 +263,12 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 
 	if(file->get_experimental_version() >= 12)
 	{
-		bool commuting = is_commuting_trip;
+		bool commuting = (get_besch() == warenbauer_t::commuters);
 		file->rdwr_bool(commuting);
-		is_commuting_trip = commuting;
+		if(commuting) {
+			const ware_besch_t *type = warenbauer_t::commuters;
+			index = type->get_index();
+		}
 	}
 }
 

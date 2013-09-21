@@ -410,7 +410,10 @@ private:
 	 */
 	weighted_vector_tpl<stadt_t*> stadt;
 
+ public:
 	sint64 last_month_bev;
+
+ private:
 
 	/**
 	 * The recorded history so far.
@@ -1258,6 +1261,22 @@ public:
 	 */
 	sint64 ticks_per_world_month;
 
+	/**
+	 * Number of ticks in one workday
+	 */
+	sint64 get_ticks_per_workday() {
+		const uint32 base_meters_per_tile = 7500; 
+		const uint32 adjustment_factor = base_meters_per_tile / (uint32)get_settings().get_meters_per_tile();
+		
+		// Adjust for bits per month
+
+		sint64 tpw = adjustment_factor * ticks_per_world_month;
+		//fprintf(stderr, "tpw %lld adjusted %lld tpm %lld\n",
+		//	tpw, calc_adjusted_monthly_figure(tpw), (sint64)ticks_per_world_month);
+		return tpw;
+	}
+
+
 	void set_ticks_per_world_month_shift(sint16 bits) {ticks_per_world_month_shift = bits; ticks_per_world_month = (1LL << ticks_per_world_month_shift); }
 
 	/**
@@ -1460,12 +1479,14 @@ public:
 	*/
 	void remove_building_from_world_list(gebaeude_t *gb);
 
-/**
+	/**
 	* Updates the weight of a building in the world list if it changes its
 	* passenger/mail demand	
 	* @author: jamespetts
 	*/
 	void update_weight_of_building_in_world_list(gebaeude_t *gb);
+
+	gebaeude_t *random_residential_building();
 
 private:
 	/*
@@ -2024,6 +2045,8 @@ public:
 	 */
 	const vector_tpl<const ware_besch_t*> &get_goods_list();
 
+	int count_larger_cities(sint64 pop);
+	
 	/**
 	 * Seaches and returns the closest city to the supplied coordinates.
 	 * @author Hj. Malthaner
@@ -2042,6 +2065,8 @@ public:
 	/// rotate plans by 90 degrees
 	void rotate90_plans(sint16 x_min, sint16 x_max, sint16 y_min, sint16 y_max);
 
+	void rotate90_world_lists();
+	
 	/// rotate map view by 90 degrees
 	void rotate90();
 
@@ -2256,6 +2281,8 @@ public:
 
 	void remove_queued_city(stadt_t* stadt);
 	void add_queued_city(stadt_t* stadt);
+
+	int count_commuters_to(koord pos);
 
 #ifdef DEBUG_SIMRAND_CALLS
 	static vector_tpl<const char*> random_callers;

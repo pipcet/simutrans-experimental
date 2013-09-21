@@ -35,6 +35,9 @@ public:
 	// version for which the savegames should be created
 	static const char *savegame_ex_version_str;
 
+	// saves the original cwd so gmon.out ends up there.
+	static char orig_dir[1024];
+
 	/// name of the directory to the pak-set
 	static std::string objfilename;
 

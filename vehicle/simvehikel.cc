@@ -855,7 +855,7 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 						// Halt overcrowded - discard goods/passengers, and collect no revenue.
 						// Experimetal 7.2 - also calculate a refund.
 
-						if(tmp.get_origin().is_bound() && get_besitzer()->get_finance()->get_account_balance() > 0)
+						if(tmp.get_origin().is_bound())
 						{
 							// Cannot refund unless we know the origin.
 							// Also, ought not refund unless the player is solvent.
@@ -901,7 +901,20 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 								// to the origin station and transported passengers/mail
 								// to the origin city only *after* they arrive at their 
 								// destinations.
-								if(tmp.get_origin().is_bound())
+								if(tmp.get_origin_pos() != koord::invalid) {
+									if(tmp.get_origin().is_bound()) {
+										tmp.get_origin()->add_pax_happy(menge);
+									}
+									stadt_t *origin_city = welt->get_city(tmp.get_origin_pos());
+									if(origin_city) {
+										origin_city->add_transported_passengers(menge);
+									}
+									else fprintf(stderr, "no origin city for <%i,%i>\n",
+										     tmp.get_origin_pos().x,
+										     tmp.get_origin_pos().y);
+										     
+								}
+								else if(tmp.get_origin().is_bound())
 								{
 									// Check required because Simutrans-Standard saved games
 									// do not have origins. Also, the start halt might not
@@ -931,6 +944,12 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 										}
 									}
 								
+									if(!origin_city)
+									{
+										origin_city = welt->suche_naechste_stadt(origin_pos);
+										//fprintf(stderr, "found origin city %s\n", origin_city ? origin_city->get_name() : "<none>");
+									}
+
 									if(origin_city)
 									{
 										origin_city->add_transported_passengers(menge);
@@ -939,7 +958,17 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 							}
 							else if(tmp.is_mail())
 							{
-								if(tmp.get_origin().is_bound())
+								if(tmp.get_origin_pos() != koord::invalid) {
+									stadt_t *origin_city = welt->get_city(tmp.get_origin_pos());
+									if(origin_city) {
+										origin_city->add_transported_mail(menge);
+									}
+									else fprintf(stderr, "no origin city for <%i,%i>\n",
+										     tmp.get_origin_pos().x,
+										     tmp.get_origin_pos().y);
+										     
+								}
+								else if(tmp.get_origin().is_bound())
 								{
 									// Check required because Simutrans-Standard saved games
 									// do not have origins. Also, the start halt might not
@@ -2266,7 +2295,9 @@ DBG_MESSAGE("vehicle_t::rdwr_from_convoi()","bought at %i/%i.",(insta_zeit%12)+1
 				*/
 				// if(  file->get_version() <= 112000  ) {
 					// restore intransit information
+				if(!ware.is_commuter()) {
 					fabrik_t::update_transit( ware, true );
+				}
 				// }
 			}
 			else if(  ware.menge>0  ) {
@@ -2443,6 +2474,119 @@ vehikel_t::~vehikel_t()
 	}
 }
 
+void vehikel_t::get_tooltip_info(cbuffer_t & buf) const
+{
+	char tooltip_text[1024];
+	tooltip_text[0] = 0;
+	if(cnv  &&  ist_erstes) {
+		uint8 state = umgebung_t::show_vehicle_states;
+		if(  state==1  ) {
+			// only show when mouse over vehicle
+			if(  welt->get_zeiger()->get_pos()==get_pos()  ) {
+				state = 2;
+			}
+			else {
+				state = 0;
+			}
+		}
+
+		// now find out what has happend
+		switch(cnv->get_state()) {
+			case convoi_t::WAITING_FOR_CLEARANCE_ONE_MONTH:
+			case convoi_t::WAITING_FOR_CLEARANCE:
+			case convoi_t::CAN_START:
+			case convoi_t::CAN_START_ONE_MONTH:
+				if(  state>=2  ) {
+					tstrncpy( tooltip_text, translator::translate("Waiting for clearance!"), lengthof(tooltip_text) );
+				}
+				break;
+
+			case convoi_t::LOADING:
+				if(  state>=1  ) 
+				{
+					char waiting_time[64];
+					cnv->snprintf_remaining_loading_time(waiting_time, sizeof(waiting_time));
+					if (cnv->get_loading_limit()) 
+					{
+						if(!cnv->is_wait_infinite() && strcmp(waiting_time, "0:00")) 
+						{
+							sprintf( tooltip_text, translator::translate("Loading (%i->%i%%), %s left!"), cnv->get_loading_level(), cnv->get_loading_limit(), waiting_time);
+						}
+						else 
+						{
+							sprintf( tooltip_text, translator::translate("Loading (%i->%i%%)!"), cnv->get_loading_level(), cnv->get_loading_limit());
+						}
+					} 
+					else 
+					{
+						sprintf( tooltip_text, translator::translate("Loading. %s left!"), waiting_time);
+					}
+				}
+				break;
+
+			case convoi_t::FAHRPLANEINGABE:
+//			case convoi_t::ROUTING_1:
+				if(  state>=2  ) {
+					tstrncpy( tooltip_text, translator::translate("Schedule changing!"), lengthof(tooltip_text) );
+				}
+				break;
+
+			case convoi_t::DRIVING:
+				if(  state>=1  ) {
+					grund_t const* const gr = welt->lookup(cnv->get_route()->back());
+					if(  gr  &&  gr->get_depot()  ) {
+						tstrncpy( tooltip_text, translator::translate("go home"), lengthof(tooltip_text) );
+					}
+					else if(  cnv->get_no_load()  ) {
+						tstrncpy( tooltip_text, translator::translate("no load"), lengthof(tooltip_text) );
+					}
+				}
+				break;
+
+			case convoi_t::LEAVING_DEPOT:
+				if(  state>=2  ) {
+					tstrncpy( tooltip_text, translator::translate("Leaving depot!"), lengthof(tooltip_text) );
+				}
+				break;
+
+				case convoi_t::REVERSING:
+				if(  state>=2  ) 
+				{
+					char reversing_time[64];
+					cnv->snprintf_remaining_reversing_time(reversing_time, sizeof(reversing_time));
+					sprintf( tooltip_text, translator::translate("Reversing. %s left"), reversing_time);
+				}
+				break;
+
+			case convoi_t::WAITING_FOR_CLEARANCE_TWO_MONTHS:
+			case convoi_t::CAN_START_TWO_MONTHS:
+				tstrncpy( tooltip_text, translator::translate("clf_chk_stucked"), lengthof(tooltip_text) );
+				break;
+
+			case convoi_t::NO_ROUTE:
+				tstrncpy( tooltip_text, translator::translate("clf_chk_noroute"), lengthof(tooltip_text) );
+				break;
+		}
+		if(is_overweight)
+		{
+			sprintf(tooltip_text, translator::translate("Too heavy"), cnv->get_name());
+		}
+
+		const aircraft_t* air = (const aircraft_t*)this;
+		if(get_waytype() == air_wt && air->runway_too_short)
+		{
+			sprintf(tooltip_text, translator::translate("Runway too short"), cnv->get_name());
+		}
+#ifdef debug_corners
+			sprintf(tooltip_text, translator::translate("CORNER: %i"), current_corner);
+#endif
+	}
+
+	if( tooltip_text[0] ) {
+		buf.printf("%s", tooltip_text);
+	}
+
+}
 
 // this routine will display a tooltip for lost, on depot order and stucked vehicles
 void vehikel_t::display_after(int xpos, int ypos, bool is_gobal) const

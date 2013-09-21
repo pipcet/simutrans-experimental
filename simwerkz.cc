@@ -3774,7 +3774,8 @@ DBG_MESSAGE("wkz_dockbau()","building dock from square (%d,%d) to (%d,%d)", pos.
 			welt->get_message()->add_message(message, pos, message_t::ai, sp->get_player_color1());
 		}
 	}
-	hausbauer_t::baue(welt, halt->get_besitzer(), bau_pos, layout, besch, &halt);
+	gebaeude_t *gb = hausbauer_t::baue(welt, halt->get_besitzer(), bau_pos, layout, besch, &halt);
+	welt->add_building_to_world_list(gb);
 
 	if(sp != halt->get_besitzer() && sp != welt->get_spieler(1)) 
 	{
@@ -4014,7 +4015,9 @@ DBG_MESSAGE("wkz_halt_aux()", "building %s on square %d,%d for waytype %x", besc
 			welt->get_message()->add_message(message, pos, message_t::ai, sp->get_player_color1());
 		}
 	}
-	hausbauer_t::neues_gebaeude( welt, halt->get_besitzer(), bd->get_pos(), layout, besch, &halt);
+	gebaeude_t *gb;
+	gb = hausbauer_t::neues_gebaeude( welt, halt->get_besitzer(), bd->get_pos(), layout, besch, &halt);
+	welt->add_building_to_world_list(gb);
 	halt->recalc_station_type();
 
 	if(neu) {
@@ -4964,7 +4967,8 @@ const char *wkz_depot_t::wkz_depot_aux(karte_t *welt, spieler_t *sp, koord3d pos
 				case ribi_t::nord:  layout = 2;    break;
 				case ribi_t::west:  layout = 3;    break;
 			}
-			hausbauer_t::neues_gebaeude( welt, sp, bd->get_pos(), layout, besch );
+			gebaeude_t *gb = hausbauer_t::neues_gebaeude( welt, sp, bd->get_pos(), layout, besch );
+			welt->add_building_to_world_list(gb);
 			spieler_t::book_construction_costs(sp, cost, pos.get_2d(), besch->get_finance_waytype());
 			if(is_local_execution()  &&  sp == welt->get_active_player()) {
 				welt->set_werkzeug( general_tool[WKZ_ABFRAGE], sp );
@@ -5137,6 +5141,7 @@ const char *wkz_build_haus_t::work( karte_t *welt, spieler_t *sp, koord3d pos )
 	if(hat_platz) {
 		spieler_t *gb_sp = besch->get_typ()!=gebaeude_t::unbekannt ? NULL : welt->get_spieler(1);
 		gebaeude_t *gb = hausbauer_t::baue(welt, gb_sp, gr->get_pos(), rotation, besch);
+		welt->add_building_to_world_list(gb);
 		if(gb) {
 			// building successful
 			if(  besch->get_utyp()!=haus_besch_t::attraction_land  &&  besch->get_utyp()!=haus_besch_t::attraction_city  ) {
@@ -5612,6 +5617,7 @@ DBG_MESSAGE("wkz_headquarter()", "building headquarter at (%d,%d)", pos.x, pos.y
 			if(ok) {
 				// then built it
 				hq = hausbauer_t::baue(welt, sp, welt->lookup_kartenboden(pos.get_2d())->get_pos(), rotate, besch, NULL);
+				welt->add_building_to_world_list(hq);
 				stadt_t *city = welt->get_city( pos.get_2d() );
 				if(city) {
 					city->add_gebaeude_to_stadt(hq);

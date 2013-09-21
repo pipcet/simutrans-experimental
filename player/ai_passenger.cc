@@ -1012,7 +1012,8 @@ DBG_MESSAGE("ai_passenger_t::do_passenger_ki()","searching attraction");
 					}
 					else {
 						const fabrik_t* f = fabriken[i].factory;
-						if(f->get_scaled_pax_demand() <= 10)
+						/* XXX calibration */
+						if(f->get_pax_demand_per_workday() <= 10)
 						{
 							// not a good object to go to ... we want more action ...
 							continue;

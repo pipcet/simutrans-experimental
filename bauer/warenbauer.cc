@@ -21,15 +21,18 @@ vector_tpl<ware_besch_t *> warenbauer_t::waren;
 uint8 warenbauer_t::max_catg_index = 0;
 
 const ware_besch_t *warenbauer_t::passagiere = NULL;
+const ware_besch_t *warenbauer_t::commuters = NULL;
 const ware_besch_t *warenbauer_t::post = NULL;
 const ware_besch_t *warenbauer_t::nichts = NULL;
 
 ware_besch_t *warenbauer_t::load_passagiere = NULL;
+ware_besch_t *warenbauer_t::load_commuters = NULL;
 ware_besch_t *warenbauer_t::load_post = NULL;
 ware_besch_t *warenbauer_t::load_nichts = NULL;
 
 static spezial_obj_tpl<ware_besch_t> spezial_objekte[] = {
 	{ &warenbauer_t::passagiere,    "Passagiere" },
+	{ &warenbauer_t::commuters,    "Commuters" },
 	{ &warenbauer_t::post,	    "Post" },
 	{ &warenbauer_t::nichts,	    "None" },
 	{ NULL, NULL }
@@ -38,6 +41,37 @@ static spezial_obj_tpl<ware_besch_t> spezial_objekte[] = {
 
 bool warenbauer_t::alles_geladen()
 {
+	/* This is a hack to make paksets without a commuters type work. We're currently
+	 * leaking memory. */
+	if(passagiere && !commuters) {
+		ware_besch_t *new_commuters = new(4096) ware_besch_t();
+		*new_commuters = *passagiere;
+		commuters = new_commuters;
+
+		text_besch_t *old_text_node = passagiere->get_child<text_besch_t>(0);
+
+		text_besch_t *text_node = new(4096) text_besch_t();
+		*text_node = *passagiere->get_child<text_besch_t>(0);
+		strcpy(text_node->text, "Commuters");
+		text_besch_t *copyright_node = new(4096) text_besch_t();
+		if(passagiere->get_child<text_besch_t>(1)) {
+			*copyright_node = *passagiere->get_child<text_besch_t>(1);
+			strcpy(copyright_node->text, passagiere->get_child<text_besch_t>(1)->text);
+		} else {
+			copyright_node = NULL;
+		}
+		text_besch_t *units_node = new(4096) text_besch_t();
+		strcpy(units_node->text, passagiere->get_child<text_besch_t>(2)->text);
+		new_commuters->node_info = new obj_besch_t*[3];
+		new_commuters->node_info[0] = text_node;
+		new_commuters->node_info[1] = copyright_node;
+		new_commuters->node_info[2] = units_node;
+		new_commuters->ware_index = INDEX_COMMUTERS;
+
+		load_commuters = new_commuters;
+		register_besch(new_commuters);
+	}
+
 	if(!::alles_geladen(spezial_objekte)) {
 		return false;
 	}
@@ -48,6 +82,7 @@ bool warenbauer_t::alles_geladen()
 	*/
 	waren.insert_at(0,load_nichts);
 	waren.insert_at(0,load_post);
+	waren.insert_at(0,load_commuters);
 	waren.insert_at(0,load_passagiere);
 
 	if(waren.get_count()>=255) {
@@ -55,7 +90,7 @@ bool warenbauer_t::alles_geladen()
 	}
 
 	// assign indexes
-	for(  uint8 i=3;  i<waren.get_count();  i++  ) {
+	for(  uint8 i=4;  i<waren.get_count();  i++  ) {
 		waren[i]->ware_index = i;
 	}
 
@@ -65,6 +100,11 @@ bool warenbauer_t::alles_geladen()
 	FOR(vector_tpl<ware_besch_t*>, const i, waren) {
 		if (i->get_catg() == 0) {
 			i->catg_index = max_catg_index++;
+		}
+		if (i->ware_index == 1) {
+			/* special case: commuters have catg index 0 */
+			i->catg_index = 0;
+			max_catg_index--;
 		}
 	}
 	// mapping of waren_t::catg to catg_index, map[catg] = catg_index
@@ -104,7 +144,7 @@ bool warenbauer_t::alles_geladen()
 	}
 	// none should never be loaded to something ...
 	// however, some place do need the dummy ...
-	ware_t::index_to_besch[2] = NULL;
+	ware_t::index_to_besch[3] = NULL;
 
 	DBG_MESSAGE("warenbauer_t::alles_geladen()","total goods %i, different kind of categories %i", waren.get_count(), max_catg_index );
 
@@ -138,6 +178,9 @@ bool warenbauer_t::register_besch(ware_besch_t *besch)
 	if(besch==passagiere) {
 		besch->ware_index = INDEX_PAS;
 		load_passagiere = besch;
+	} else if(besch==commuters) {
+		besch->ware_index = INDEX_COMMUTERS;
+		load_commuters = besch;
 	} else if(besch==post) {
 		besch->ware_index = INDEX_MAIL;
 		load_post = besch;

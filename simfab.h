@@ -317,8 +317,8 @@ private:
 	 * Pax/mail demand scaled with prodbase and month length
 	 * @author Knightly
 	 */
-	uint32 scaled_pax_demand;
-	uint32 scaled_mail_demand;
+	uint32 pax_demand_per_workday;
+	uint32 mail_demand_per_workday;
 
 	/**
 	 * Update scaled electricity amount
@@ -667,7 +667,7 @@ public:
 	void set_base_production(sint32 p);
 
 	// TODO: Consider refctoring so as to avoid calling this method every step (although preliminary tests indicate that this does not seem to cause much slow-down compared to the previous method).
-	sint32 get_current_production() const { return (welt->calc_adjusted_monthly_figure(((sint64)prodbase * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_electric + prodfactor_pax + prodfactor_mail)))) >> 8l; }
+	sint32 get_current_production_per_month() const { return (welt->calc_adjusted_monthly_figure(((sint64)prodbase * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_electric + prodfactor_pax + prodfactor_mail)))) >> 8l; }
 
 	/* prissi: returns the status of the current factory, as well as output */
 	enum { bad, medium, good, inactive, nothing };
@@ -701,8 +701,10 @@ public:
 	 * @author Knightly
 	 */
 	uint32 get_scaled_electric_amount() const { return scaled_electric_amount; }
-	uint32 get_scaled_pax_demand() const { return scaled_pax_demand; }
-	uint32 get_scaled_mail_demand() const { return scaled_mail_demand; }
+	uint32 get_pax_demand_per_workday() const { return pax_demand_per_workday; }
+	uint32 get_mail_demand_per_workday() const { return mail_demand_per_workday; }
+	uint32 get_pax_demand_per_month() const { return welt->calc_adjusted_monthly_figure(pax_demand_per_workday); }
+	uint32 get_mail_demand_per_month() const { return welt->calc_adjusted_monthly_figure(mail_demand_per_workday); }
 
 	bool is_end_consumer() const { return (ausgang.empty() && !besch->is_electricity_producer()); }
 

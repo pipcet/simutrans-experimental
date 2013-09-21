@@ -13,6 +13,7 @@
 #include "../simimg.h"
 #include "../simcolor.h"
 #include "../simconst.h"
+#include "../simdepot.h"
 #include "../dataobj/koord3d.h"
 #include "../dataobj/dingliste.h"
 #include "wege/weg.h"

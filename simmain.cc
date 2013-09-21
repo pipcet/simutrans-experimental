@@ -473,6 +473,7 @@ int simu_main(int argc, char** argv)
 	const char* path_sep = PATHSEP;
 
 
+	getcwd(umgebung_t::orig_dir, lengthof(umgebung_t::orig_dir));
 #ifdef __BEOS__
 	if (1) // since BeOS only supports relative paths ...
 #else
@@ -1058,7 +1059,7 @@ DBG_MESSAGE("simmain","demo file not found at %s",buf.get_str() );
 		}
 	}
 
-	// now always writing in user dir (which points the the program dir in multiuser mode)
+	// now always writing in user dir (which points to the program dir in multiuser mode)
 	chdir( umgebung_t::user_dir );
 
 	// init midi before loading sounds
@@ -1297,6 +1298,8 @@ DBG_MESSAGE("simmain","demo file not found at %s",buf.get_str() );
 	// free all list memories (not working, since there seems to be unitialized list still waiting for automated destruction)
 	freelist_t::free_all_nodes();
 #endif
+
+	chdir(umgebung_t::orig_dir);
 
 	return 0;
 }
