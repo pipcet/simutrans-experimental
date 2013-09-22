@@ -5858,8 +5858,6 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 {
 	grund_t* bd = welt->lookup_kartenboden(k);
 
-	// we're called on bridges by build_bridge()
-	if (0)
 	if (bd->get_typ() != grund_t::boden) {
 		// not on water, monorails, foundations, tunnel or bridges
 		return false;
