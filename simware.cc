@@ -301,6 +301,7 @@ void ware_t::laden_abschliessen(karte_t *welt, spieler_t * /*sp*/)  //"Invite fi
 
 void ware_t::rotate90( karte_t *welt, sint16 y_size )
 {
+	origin_pos.rotate90( y_size);
 	zielpos.rotate90( y_size );
 	update_factory_target(welt);
 }
