@@ -172,7 +172,7 @@ way_leaving_road=25
 # of using player transport in some cases.
 # 0 = false; 1 = true. Default: false.
 
-allow_routing_on_foot = 0
+allow_routing_on_foot = 1
 
 # This setting determines how often that goods/passengers have their paths refreshed.
 # The number is in steps. The default, 8192, is equivalent to about 2 hours of in-game
@@ -272,7 +272,7 @@ avoid_overcrowding = 0
 # number depends on: (1) the below maximum; (2) the size of the building generating the mail/
 # passengers; and (3) a random factor.
 
-passenger_routing_packet_size = 18
+passenger_routing_packet_size = 1
 
 # This setting determines the relationship between the number of private car trips
 # generated and (1) the congestion recorded in the cities; and (2) the number of
@@ -394,7 +394,7 @@ max_elevated_way_building_level = 2
 # Set to 1 for paksets that do not have control towers defined
 # as such.
 
-allow_airports_without_control_towers = 1
+allow_airports_without_control_towers = 0
 
 
 #################################### Passenger settings ##################################
@@ -440,7 +440,7 @@ passenger_routing_midrange_chance = 12
 # For example, if the number is set at 2, there will be an equal chance
 # of passengers having 0, 1 or 2 alternative destinations).
 
-max_alternative_destinations = 4
+max_alternative_destinations = 255
 
 # Passengers have a maximum tolerance level for how long that they will
 # spend travelling. The further that the passengers want to go, the more
@@ -752,7 +752,7 @@ max_years_obsolete = 30
 # The limit is given in percent of factory storage (0=off)
 # It should be not too low to allow big convoys fully loaded at more than one
 # factory (for medium sized maps 500 seems a reasonable number)
-maximum_intransit_percentage = 0
+maximum_intransit_percentage = 100
 
 ################################# Display settings ################################
 
@@ -802,7 +802,7 @@ ground_info = 1
 
 # Show passenger level of townhalls?
 # (1=on, 0=off)
-townhall_info = 0
+townhall_info = 1
 
 # always open only a single info window for the ground,
 # even if there are more objects on this tile
@@ -910,10 +910,10 @@ tooltip_duration = 5000
 #
 
 # Use beginner mode for new maps
-first_beginner = 0
+first_beginner = 1
 
 # In beginner mode, all revenues are multiplied by a factor (default 1500=1.5)
-beginner_price_factor = 1500
+beginner_price_factor = 5000
 
 # Show graphs left to right (normal graph format)
 # or right to left (old Simutrans format)?
@@ -962,7 +962,7 @@ toll_waycost_percentage = 0
 #cost_buy_land=100
 #cost_alter_land=1000
 #cost_set_slope=2500
-#cost_found_city=5000000
+cost_found_city=1000000
 #cost_multiply_found_industry=20000
 #cost_remove_tree=100
 #cost_multiply_remove_haus=1000
@@ -1050,7 +1050,7 @@ default_increase_maintenance_after_years_other = 30
 # This determines whether obsolete vehicles can be purchased new
 # Default is "no" (0)
 # allow buying obsolete vehicles (=1) in depot
-allow_buying_obsolete_vehicles = 0
+allow_buying_obsolete_vehicles = 1
 
 # This allows for a "driving it off the lot" drop in value.
 # This is not on by default, even in Experimental.
@@ -1248,7 +1248,7 @@ use_timeline = 3
 #
 # other recommended vaule for 64 is 1956
 #
-starting_year = 1900
+starting_year = 1888
 
 # Starting month of the game for people who want to start in summer (default 1=January)
 starting_month = 1
@@ -1277,7 +1277,7 @@ bits_per_month = 20
 saveformat = zipped
 
 # autosave every x months (0=off)
-autosave = 12
+autosave = 1
 
 # How many frames per second to use? Display may look pretty until 10 or so
 # (depends very much on computer, game complexity and graphics driver)
