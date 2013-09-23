@@ -3807,7 +3807,7 @@ void karte_t::new_month()
 		const uint32 chance = simrand(100, "void karte_t::new_month()");
 		if(chance < percentage)
 		{
-			fabrikbauer_t::increase_industry_density(this, true, true);
+			//fabrikbauer_t::increase_industry_density(this, true, true);
 		}
 	}
 
@@ -3842,7 +3842,7 @@ void karte_t::new_month()
 		// Add industries if there is a shortage of electricity - power stations will be built.
 		// Also, check whether power stations are available, or else large quantities of other industries will
 		// be built instead every month.
-		fabrikbauer_t::increase_industry_density(this, true, true, true);
+		//fabrikbauer_t::increase_industry_density(this, true, true, true);
 	}
 
 	INT_CHECK("simworld 3130");
