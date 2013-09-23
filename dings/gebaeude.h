@@ -283,14 +283,14 @@ public:
 	void add_passengers_generated_local(uint16 number) { passengers_generated_local += number; }
 	void add_passengers_succeeded_local(uint16 number) { passengers_succeeded_local += number; }
 
-	uint16 get_passenger_success_percent_this_year_local() const { return passengers_generated_local > 0 ? (passengers_succeeded_local * 100) / passengers_generated_local : 0; }
+	uint16 get_passenger_success_percent_this_year_local() const { return passengers_generated_local > 0 ? (passengers_succeeded_local * 100) / passengers_generated_local : 50; }
 	uint16 get_passenger_success_percent_last_year_local() const { return passenger_success_percent_last_year_local; }
 	uint16 get_average_passenger_success_percent_local() const { return (get_passenger_success_percent_this_year_local() + passenger_success_percent_last_year_local) / 2; }
 
 	void add_passengers_generated_non_local(uint16 number) { passengers_generated_non_local += number; }
 	void add_passengers_succeeded_non_local(uint16 number) { passengers_succeeded_non_local += number; }
 
-	uint16 get_passenger_success_percent_this_year_non_local() const { return passengers_generated_non_local > 0 ? (passengers_succeeded_non_local * 100) / passengers_generated_non_local : 0; }
+	uint16 get_passenger_success_percent_this_year_non_local() const { return passengers_generated_non_local > 0 ? (passengers_succeeded_non_local * 100) / passengers_generated_non_local : 50; }
 	uint16 get_passenger_success_percent_last_year_non_local() const { return passenger_success_percent_last_year_non_local; }
 	uint16 get_average_passenger_success_percent_non_local() const { return (get_passenger_success_percent_this_year_non_local() + passenger_success_percent_last_year_non_local) / 2; }
 
