@@ -1364,6 +1364,8 @@ void gebaeude_t::commuters_changed()
 {
 	static int count_since_last_okay = 0;
 
+
+	return;
 	if(welt->count_commuters_to(this->get_pos()) !=
 	   commuters_in_transit) {
 		count_since_last_okay++;
