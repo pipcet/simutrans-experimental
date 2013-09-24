@@ -107,6 +107,14 @@ ifdef DEBUG
       CFLAGS += -O0
     endif
   endif
+  ifeq ($(shell expr $(DEBUG) \>= 4), 1)
+     CC=gcc-4.8
+     CXX=g++-4.8
+     CFLAGS += -fsanitize=address
+     LIBS += -fsanitize=address
+#    CFLAGS += -fmudflap -fbounds-check
+#    LIBS += -lmudflapth
+  endif
 else
 # Disable assertions
   CFLAGS += -DNDEBUG
