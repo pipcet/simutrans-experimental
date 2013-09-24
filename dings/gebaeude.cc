@@ -251,33 +251,61 @@ void gebaeude_t::check_road_tiles(bool del)
 		}
 	}
 
+	fprintf(stderr, "attraction %p has tiles at: ", this);
+	ITERATE(building_list, n)
+	{
+		fprintf(stderr, "<%d,%d,%d> [%p] ",
+			building_list[n]->get_pos().x,
+			building_list[n]->get_pos().y,
+			building_list[n]->get_pos().z,
+			building_list[n]);
+	}
+	fprintf(stderr, "\n");
+
 	ITERATE(building_list, n)
 	{
 		const gebaeude_t* gb = building_list[n];
 
 		for(uint8 i = 0; i < 8; i ++)
 		{
-			// Check for connected roads. Only roads in immediately neighbouring tiles
-			// and only those on the same height will register a connexion.
+			/* This is tricky: roads can change height, and we're currently
+			 * not keeping track of when they do. We might show
+			 * up as connecting to a road that's no longer at the right
+			 * height. Therefore, iterate over all possible road levels when
+			 * removing, but not when adding new connections. */
 			koord pos_neighbour = gb->get_pos().get_2d() + (gb->get_pos().get_2d().neighbours[i]);
-			koord3d pos3d(pos_neighbour, gb->get_pos().z);
-			gr_this = welt->lookup(pos3d);
 			if(del) {
-				//gr_this = welt->lookup(pos3d.get_2d());
-			}
-			if(!gr_this)
-			{
-				continue;
-			}
-			strasse_t* str = (strasse_t*)gr_this->get_weg(road_wt);
-			if(str)
-			{
-				if(del)
+				planquadrat_t *plan = welt->lookup(pos_neighbour);
+				if(!plan)
 				{
-					str->connected_buildings.remove(this);
+					continue;
 				}
-				else
+				for(int j=0; j<plan->get_boden_count(); j++) {
+					grund_t *bd = plan->get_boden_bei(j);
+					strasse_t *str = (strasse_t *)bd->get_weg(road_wt);
+
+					if(str) {
+						str->connected_buildings.remove(this);
+						fprintf(stderr, "disconnecting %p from %p at <%d,%d,%d> (neighbour %d)\n",
+							this, str, gb->get_pos().x, gb->get_pos().y, gb->get_pos().z, i);
+					}
+				}
+			} else {
+				koord3d pos3d(pos_neighbour, gb->get_pos().z);
+
+				// Check for connected roads. Only roads in immediately neighbouring tiles
+				// and only those on the same height will register a connexion.
+				gr_this = welt->lookup(pos3d);
+
+				if(!gr_this)
 				{
+					continue;
+				}
+				strasse_t* str = (strasse_t*)gr_this->get_weg(road_wt);
+				if(str)
+				{
+					fprintf(stderr, "connecting %p to %p at <%d,%d,%d>\n",
+						this, str, pos3d.x, pos3d.y, pos3d.z);
 					str->connected_buildings.append_unique(this);
 				}
 			}
