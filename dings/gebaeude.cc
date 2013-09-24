@@ -251,17 +251,6 @@ void gebaeude_t::check_road_tiles(bool del)
 		}
 	}
 
-	fprintf(stderr, "attraction %p has tiles at: ", this);
-	ITERATE(building_list, n)
-	{
-		fprintf(stderr, "<%d,%d,%d> [%p] ",
-			building_list[n]->get_pos().x,
-			building_list[n]->get_pos().y,
-			building_list[n]->get_pos().z,
-			building_list[n]);
-	}
-	fprintf(stderr, "\n");
-
 	ITERATE(building_list, n)
 	{
 		const gebaeude_t* gb = building_list[n];
@@ -286,8 +275,6 @@ void gebaeude_t::check_road_tiles(bool del)
 
 					if(str) {
 						str->connected_buildings.remove(this);
-						fprintf(stderr, "disconnecting %p from %p at <%d,%d,%d> (neighbour %d)\n",
-							this, str, gb->get_pos().x, gb->get_pos().y, gb->get_pos().z, i);
 					}
 				}
 			} else {
@@ -304,8 +291,6 @@ void gebaeude_t::check_road_tiles(bool del)
 				strasse_t* str = (strasse_t*)gr_this->get_weg(road_wt);
 				if(str)
 				{
-					fprintf(stderr, "connecting %p to %p at <%d,%d,%d>\n",
-						this, str, pos3d.x, pos3d.y, pos3d.z);
 					str->connected_buildings.append_unique(this);
 				}
 			}
