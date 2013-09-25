@@ -5053,20 +5053,6 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 				current_destination.building->commuters_departed(pax_left_to_do);
 			}
 
-			
-
-			// XXX we can now
-			// We cannot do this on arrival, as the ware packets do not remember their origin building.
-			// TODO: Change the names of these from "local" and "non-local" to "commuting" and "visiting".
-					
-			if(trip == commuting_trip && gb)
-			{
-				gb->add_passengers_succeeded_local(pax_left_to_do);
-			}
-			else if(trip == visiting_trip && gb)
-			{
-				gb->add_passengers_succeeded_non_local(pax_left_to_do);
-			}
 			// Do nothing if trip == mail.
 			break;
 

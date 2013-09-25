@@ -905,6 +905,14 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 									if(tmp.get_origin().is_bound()) {
 										tmp.get_origin()->add_pax_happy(menge);
 									}
+									gebaeude_t *gb = welt->lookup(tmp.get_origin_pos())->get_kartenboden()->find<gebaeude_t>();
+									if(gb) {
+										if(tmp.is_commuter()) { 
+											gb->add_passengers_succeeded_local(menge);
+										} else {
+											gb->add_passengers_succeeded_non_local(menge);
+										}
+									}
 									stadt_t *origin_city = welt->get_city(tmp.get_origin_pos());
 									if(origin_city) {
 										origin_city->add_transported_passengers(menge);
