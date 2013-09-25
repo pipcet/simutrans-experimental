@@ -325,6 +325,8 @@ public:
 
 	bool jobs_available() const;
 
+	int growth_step();
+
 private:
 	sint64 calc_available_jobs_by_time() const;
 

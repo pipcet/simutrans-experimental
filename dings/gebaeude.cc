@@ -1434,6 +1434,35 @@ uint16 gebaeude_t::get_visitor_demand_per_workday() const
 	return get_visitor_demand();
 }
 
+int gebaeude_t::growth_step()
+{
+	gebaeude_t *gb = this;
+
+	if(welt->get_zeit_ms() - insta_zeit < welt->ticks_per_world_month) {
+		return 0;
+	}
+
+	int growth_per_10000 = gb->get_passenger_success_percent_this_year_local() *
+		gb->get_passenger_success_percent_this_year_non_local();
+	int shrinkage_per_10000 = (100 - gb->get_passenger_success_percent_this_year_local()) *
+		(100 - gb->get_passenger_success_percent_this_year_non_local());
+	fprintf(stderr, "gb %p at <%i,%i> success prob %d/10000 shrinkage %d/10000\n",
+		gb, gb->get_pos().x, gb->get_pos().y, growth_per_10000, shrinkage_per_10000);
+
+	int r = simrand(10000, "city growth or shrinkage");
+
+	if(r < growth_per_10000)
+	{
+		return +1;
+	}
+	else if(r < growth_per_10000 + shrinkage_per_10000)
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
 uint16 gebaeude_t::get_jobs() const
 {
 	if(this != this->get_first_tile()) {
