@@ -465,6 +465,7 @@ private:
 	 */
 	void build_city_building(koord pos, bool new_town);
 	bool renovate_city_building(gebaeude_t *gb);
+	bool downgrade_city_building(gebaeude_t *gb);
 	// Subroutines for build_city_building and renovate_city_buiding
 	// @author neroden
 	const gebaeude_t* get_citybuilding_at(const koord k) const;
