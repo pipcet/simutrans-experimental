@@ -16,11 +16,12 @@
  */
 class text_besch_t : public obj_besch_t {
 public:
-	const char* get_text() const { return text; }
+		const char* get_text() const { return text; }
 
-	using obj_besch_t::operator new;
+		using obj_besch_t::operator new;
 
-	char text[];
+	private:
+		char text[];
 
 	friend class text_reader_t;
 };
