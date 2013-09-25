@@ -5343,8 +5343,8 @@ void stadt_t::build_city_building(const koord k, bool new_town)
 	int industrial_suitability, commercial_suitability, residential_suitability;
 	bewerte_res_com_ind(k, industrial_suitability, commercial_suitability, residential_suitability );
 
-	const int sum_industrial   = industrial_suitability  + employment_wanted;
-	const int sum_commercial = commercial_suitability  + employment_wanted;
+	const int sum_industrial   = industrial_suitability  + employment_wanted - 1000000;
+	const int sum_commercial = commercial_suitability  + employment_wanted - 1000000;
 	const int sum_residential   = residential_suitability + housing_wanted;
 
 	// does the timeline allow this building?
@@ -5667,8 +5667,8 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 	int industrial_suitability, commercial_suitability, residential_suitability;
 	bewerte_res_com_ind(k, industrial_suitability, commercial_suitability, residential_suitability );
 
-	const int sum_industrial   = industrial_suitability  + employment_wanted;
-	const int sum_commercial = commercial_suitability  + employment_wanted;
+	const int sum_industrial   = industrial_suitability  + employment_wanted - 1000000;
+	const int sum_commercial = commercial_suitability  + employment_wanted - 1000000;
 	const int sum_residential   = residential_suitability + housing_wanted;
 
 	// does the timeline allow this building?
