@@ -3047,34 +3047,38 @@ void stadt_t::calc_growth()
 	}
 	fprintf(stderr, "\n");
 
+	for(int i=0; i<1; i++) {
 	gebaeude_t *gb = welt->random_residential_building();
 	if(gb) {
 		stadt_t *city = gb->get_stadt();
-		int growth_per_10000 = gb->get_passenger_success_percent_this_year_local() *
-			gb->get_passenger_success_percent_this_year_non_local();
-		int shrinkage_per_10000 = (100 - gb->get_passenger_success_percent_this_year_local()) *
-			(100 - gb->get_passenger_success_percent_this_year_non_local());
-		fprintf(stderr, "gb %p at <%i,%i> success prob %d/10000 shrinkage %d/10000\n",
-			gb, gb->get_pos().x, gb->get_pos().y, growth_per_10000, shrinkage_per_10000);
-		
-		int r = simrand(10000, "city growth or shrinkage");
-		
-		if(1 || r < growth_per_10000)
-		{
-			bev += 100;
+		int growth = gb->growth_step();
+		koord3d pos = gb->get_pos();
+
+		if(growth > 0) {
+			//bev += 100;
 			if(!city->renovate_city_building(gb))
 			{
+				// XXX city->baue_near(gb)
+				city->baue(false);
 			}
 			// implement growth here
-		}
-		else if(r < growth_per_10000 + shrinkage_per_10000)
-		{
-			if(city->can_shrink()) {
-				delete gb;
+		} else if(growth < 0) {
+			if(!city->downgrade_city_building(gb)) {
+				if(city->won > 10 * gb->get_tile()->get_besch()->get_level()) {
+					city->bev -= 10 * gb->get_tile()->get_besch()->get_level();
+					city->won -= 10 * gb->get_tile()->get_besch()->get_level();
+					hausbauer_t::remove(welt, besitzer_p /* XXX or NULL */, gb);
+					city->bev = city->won;
+				}
+			} else {
+				fprintf(stderr, "downgraded building at <%d,%d>\n",
+					pos.x, pos.y);
 			}
 		}
+		
 	}
-	
+	}
+
 	//fprintf(stderr, "%sp1 %lld p2 %lld = %lld - %lld - %lld - %lld w %d bev %d won %d arb %d %s density %lld larger %d %lld\n\r", wachstum > 0 ? "+" : (wachstum == -16*bev ? " " : ","), p1, p2, city_history_month[0][HIST_PAS_GENERATED], city_history_month[0][HIST_PAS_TRANSPORTED], city_history_month[0][HIST_PAS_WALKED], city_history_month[0][HIST_CITYCARS], wachstum/16, bev, won, arb, this->get_name(), density, larger_towns, (long long)welt->last_month_bev);
 	return;
 	
