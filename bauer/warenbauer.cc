@@ -52,16 +52,16 @@ bool warenbauer_t::alles_geladen()
 
 		text_besch_t *text_node = new(4096) text_besch_t();
 		*text_node = *passagiere->get_child<text_besch_t>(0);
-		strcpy(text_node->text, "Commuters");
+		strcpy(text_node->get_text(), "Commuters");
 		text_besch_t *copyright_node = new(4096) text_besch_t();
 		if(passagiere->get_child<text_besch_t>(1)) {
 			*copyright_node = *passagiere->get_child<text_besch_t>(1);
-			strcpy(copyright_node->text, passagiere->get_child<text_besch_t>(1)->text);
+			strcpy(copyright_node->get_text(), passagiere->get_child<text_besch_t>(1)->get_text());
 		} else {
 			copyright_node = NULL;
 		}
 		text_besch_t *units_node = new(4096) text_besch_t();
-		strcpy(units_node->text, passagiere->get_child<text_besch_t>(2)->text);
+		strcpy(units_node->get_text(), passagiere->get_child<text_besch_t>(2)->get_text());
 		new_commuters->node_info = new obj_besch_t*[3];
 		new_commuters->node_info[0] = text_node;
 		new_commuters->node_info[1] = copyright_node;
