@@ -5762,7 +5762,7 @@ bool stadt_t::build_bridge(grund_t* bd, ribi_t::ribi direction) {
 	// Build a road past the end of the future bridge (even if it has no connections yet)
 	// This may fail, in which case we shouldn't build the bridge
 	successfully_built_past_end = baue_strasse( (end+zv).get_2d(), NULL, true);
-	
+
 	if (!successfully_built_past_end) {
 		return false;
 	}
