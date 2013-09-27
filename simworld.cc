@@ -4628,10 +4628,12 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 		if(trip == commuting_trip)
 		{
 			current_destination.building->add_passengers_generated_local(pax_left_to_do);
+			current_destination.building->growth_score(-1);
 		}
 		else if(trip == visiting_trip)
 		{
 			current_destination.building->add_passengers_generated_non_local(pax_left_to_do);
+			current_destination.building->growth_score(-1);
 		}
 		current_destination = first_destination;
 
@@ -5076,7 +5078,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			// TODO: Change the names of these from "local" and "non-local" to "commuting" and "visiting".
 			if(trip == commuting_trip)
 			{
-				gb->add_passengers_succeeded_local(pax_left_to_do);
+				first_origin->growth_score(1);
+				first_origin->add_passengers_generated_local(-pax_left_to_do);
+				//gb->add_passengers_succeeded_local(pax_left_to_do); XXX why gb, not first_origin?
 				if(current_destination.type == factory)
 				{
 					// Only add commuting passengers at a factory.
@@ -5088,7 +5092,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			}
 			else if(trip == visiting_trip)
 			{
-				gb->add_passengers_succeeded_non_local(pax_left_to_do);
+				first_origin->add_passengers_generated_local(-pax_left_to_do);
+				first_origin->growth_score(1);
+//				gb->add_passengers_succeeded_non_local(pax_left_to_do);
 			}
 			// Do nothing if trip == mail.
 			break;
@@ -5117,7 +5123,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			// TODO: Change the names of these from "local" and "non-local" to "commuting" and "visiting".
 			if(trip == commuting_trip)
 			{
-				first_origin->add_passengers_succeeded_local(pax_left_to_do);
+				first_origin->add_passengers_generated_local(-pax_left_to_do);
+				first_origin->growth_score(1);
+				//first_origin->add_passengers_succeeded_local(pax_left_to_do);
 				if(current_destination.type == factory)
 				{
 					// Only add commuting passengers at a factory.
@@ -5130,7 +5138,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			}
 			else if(trip == visiting_trip)
 			{
-				first_origin->add_passengers_succeeded_non_local(pax_left_to_do);
+				first_origin->add_passengers_generated_non_local(-pax_left_to_do);
+				first_origin->growth_score(1);
+				//first_origin->add_passengers_succeeded_non_local(pax_left_to_do);
 			}
 			// Do nothing if trip == mail.
 			break;
@@ -5172,8 +5182,10 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 
 			break;
 
-		case no_route:
 		case destination_unavailable:
+			first_origin->add_passengers_generated_local(-pax_left_to_do);
+			first_origin->growth_score(1);
+		case no_route:
 
 			if(city && wtyp == warenbauer_t::passagiere)
 			{

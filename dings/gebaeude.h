@@ -152,6 +152,8 @@ private:
 
 	uint16 commuters_in_transit;
 
+	sint16 score;
+
 #ifdef INLINE_DING_TYPE
 protected:
 	gebaeude_t(karte_t *welt, ding_t::typ type);
@@ -326,6 +328,7 @@ public:
 	bool jobs_available() const;
 
 	int growth_step();
+	void growth_score(int);
 
 private:
 	sint64 calc_available_jobs_by_time() const;

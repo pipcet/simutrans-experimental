@@ -909,8 +909,10 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 									if(gb) {
 										if(tmp.is_commuter()) { 
 											gb->add_passengers_succeeded_local(menge);
+											gb->growth_score(2);
 										} else {
 											gb->add_passengers_succeeded_non_local(menge);
+											gb->growth_score(2);
 										}
 									}
 									stadt_t *origin_city = welt->get_city(tmp.get_origin_pos());

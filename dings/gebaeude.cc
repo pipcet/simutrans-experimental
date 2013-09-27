@@ -74,6 +74,7 @@ void gebaeude_t::init()
 	passenger_success_percent_last_year_non_local = 0;
 	available_jobs_by_time = -9223372036854775808ll;
 	commuters_in_transit = 0;
+	score = 0;
 }
 
 
@@ -879,6 +880,8 @@ void gebaeude_t::info(cbuffer_t & buf, bool dummy) const
 		buf.printf("\nTEST jobs: %i/%i/%i [%i], %f per month\n", (int)get_jobs() - check_remaining_available_jobs() - commuters_in_transit, (int)commuters_in_transit, (int)(get_jobs()), check_remaining_available_jobs(), (double)(welt->calc_adjusted_monthly_figure(get_jobs_per_workday()<<16))/65536.0);
 		buf.printf("counting commuters: %d\n", welt->count_commuters_to(this->get_pos()));
 		buf.printf("gb %p ft %p\n", this, get_first_tile());
+		buf.printf("jobs %d population %d visitor demand %d\n", get_jobs(), get_population(), get_visitor_demand());
+		buf.printf("score %d\n", score);
 
 		buf.append("\n");
 		if(get_besitzer()==NULL) {
@@ -1434,6 +1437,11 @@ uint16 gebaeude_t::get_visitor_demand_per_workday() const
 	return get_visitor_demand();
 }
 
+void gebaeude_t::growth_score(int sc)
+{
+	score += sc;
+}
+
 int gebaeude_t::growth_step()
 {
 	gebaeude_t *gb = this;
@@ -1453,10 +1461,20 @@ int gebaeude_t::growth_step()
 
 	if(r < growth_per_10000)
 	{
-		return +1;
+		//score++;
 	}
 	else if(r < growth_per_10000 + shrinkage_per_10000)
 	{
+		//score--;
+	}
+
+	if(score >= 16*get_population()) {
+		score = 0;
+		fprintf(stderr, "growth at <%d,%d>\n", this->get_pos().x, this->get_pos().y);
+		return 1;
+	} else if(score <= -16*get_population()) {
+		score = 0;
+		fprintf(stderr, "shrinkage at <%d,%d>\n", this->get_pos().x, this->get_pos().y);
 		return -1;
 	}
 
