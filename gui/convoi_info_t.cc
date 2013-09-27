@@ -506,7 +506,7 @@ enable_home:
 			cnv->get_tooltip_info(buf);
 			
 			const int pos_y = pos_y0 + 6 * LINESPACE; // line 7
-			display_proportional(pos_x, pos_y, buf, ALIGN_LEFT, COL_BLACK, true ) + 5;
+			display_proportional(pos_x, pos_y, buf, ALIGN_LEFT, COL_BLACK, true );
 		}
 		
 		
