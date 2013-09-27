@@ -126,7 +126,6 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 			}	
 			if(file->get_experimental_version() >= 12)
 			{
-				fprintf(stderr, "saved %d,%d\n", origin_pos.x, origin_pos.y);
 				origin_pos.rdwr(file);
 			}
 		}
@@ -148,10 +147,10 @@ void ware_t::rdwr(karte_t *welt,loadsave_t *file)
 				origin = zwischenziel;
 			}
 
-				if(file->get_experimental_version() >= 12)
-				{
-					origin_pos.rdwr(file);
-					fprintf(stderr, "loaded %d,%d\n", origin_pos.x, origin_pos.y);}
+			if(file->get_experimental_version() >= 12)
+			{
+				origin_pos.rdwr(file);
+			}
 		}
 	}
 	else 
