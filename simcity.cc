@@ -5554,7 +5554,7 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 	// (sum_wohnung>sum_industrie  &&  sum_wohnung>sum_gewerbe
 	if (  want_to_have == gebaeude_t::unbekannt  ) {
 		// we must check, if we can really update to higher level ...
-		const int try_level = (alt_typ == gebaeude_t::wohnung ? level + 1 : level);
+		const int try_level = (alt_typ == gebaeude_t::wohnung ? level - 1 : level);
 		h = hausbauer_t::get_residential(0, current_month, cl, false, neighbor_building_clusters);
 		if(  h != NULL  &&  h->get_level() <= try_level  &&  (max_level == 0 || h->get_level() <= max_level)  ) {
 			want_to_have = gebaeude_t::wohnung;
