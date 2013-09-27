@@ -81,7 +81,7 @@ SDL_CONFIG     ?= sdl-config
 
 
 ifneq ($(OPTIMISE),)
-    CFLAGS += -O3
+    CFLAGS += -O6
   ifneq ($(OSTYPE),mac)
     ifneq ($(OSTYPE),haiku)
       ifneq ($(OSTYPE),amiga)
@@ -90,8 +90,11 @@ ifneq ($(OPTIMISE),)
     endif
   endif
 else
-  CFLAGS += -O
+#  CFLAGS += -O
 endif
+
+CC=gcc-4.8
+CXX=g++-4.8
 
 ifdef DEBUG
   ifeq ($(shell expr $(DEBUG) \>= 1), 1)
@@ -112,8 +115,6 @@ ifdef DEBUG
      CXX=g++-4.8
      CFLAGS += -fsanitize=address
      LIBS += -fsanitize=address
-#    CFLAGS += -fmudflap -fbounds-check
-#    LIBS += -lmudflapth
   endif
 else
 # Disable assertions
