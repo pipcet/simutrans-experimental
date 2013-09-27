@@ -4762,7 +4762,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 				}
 			}
 
-			vector_tpl<halthandle_t> destination_list(tile_list[0]->get_haltlist_count() * size.x * size.y);
+			vector_tpl<halthandle_t> destination_list(0);
+			// I'm seeing buildings without any tiles, which is a really bad bug somewhere else.
+			// tile_list[0]->get_haltlist_count() * size.x * size.y);
 			FOR(vector_tpl<const planquadrat_t*>, const& current_tile, tile_list)
 			{
 				const nearby_halt_t* halt_list = current_tile->get_haltlist();

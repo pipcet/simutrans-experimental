@@ -688,8 +688,12 @@ bool stadt_t::bewerte_loc(const koord pos, const rule_t &regel, int rotation)
 				if (gr->hat_weg(road_wt)) return false;
 				break;
 			case 'h':
-				// is house
-				if (gr->get_typ() != grund_t::fundament  ||  gr->obj_bei(0)->get_typ()!=ding_t::gebaeude) return false;
+				// is house.
+				if (gr->get_typ() != grund_t::fundament  ||
+				    gr->obj_bei(0) && gr->obj_bei(0)->get_typ()!=ding_t::gebaeude)
+				{
+					return false;
+				}
 				break;
 			case 'H':
 				// no house
@@ -5048,7 +5052,7 @@ static int layout_to_orientations[] = {
  */
 const gebaeude_t* stadt_t::get_citybuilding_at(const koord k) const {
 	grund_t* gr = welt->lookup_kartenboden(k);
-	if (gr && gr->get_typ() == grund_t::fundament && gr->obj_bei(0)->get_typ() == ding_t::gebaeude) {
+	if (gr && gr->get_typ() == grund_t::fundament && gr->obj_bei(0) && gr->obj_bei(0)->get_typ() == ding_t::gebaeude) {
 		// We have a building as a neighbor...
 		gebaeude_t const* const gb = ding_cast<gebaeude_t>(gr->first_obj());
 		if (gb != NULL) {
