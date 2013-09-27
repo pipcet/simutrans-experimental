@@ -3113,7 +3113,7 @@ void stadt_t::calc_growth()
 	}
 	
 	wachstum += growth_factor;
-}
+	}
 
 
 // does constructions ...
