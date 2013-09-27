@@ -6304,6 +6304,11 @@ void stadt_t::baue(bool new_town)
 				if(  gr==NULL  ||  !gr->ist_natur()  ) {
 					continue;
 				}
+				if(gr->get_pos().z <= welt->get_grundwasser()) {
+					if(!ribi_t::is_threeway(gr->get_grund_hang())) {
+						continue;
+					}
+				}
 
 				// a potential candidate coordinate
 				candidates.append(k);
