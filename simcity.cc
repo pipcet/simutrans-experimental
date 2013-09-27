@@ -5961,7 +5961,16 @@ bool stadt_t::build_bridge(grund_t* bd, ribi_t::ribi direction) {
 	brueckenbauer_t::baue_bruecke(welt, NULL, bd->get_pos(), end, zv, bridge, welt->get_city_road());
 	// Now connect the bridge to the road we built
 	// (Is there an easier way?)
-	baue_strasse( (end+zv).get_2d(), NULL, false );
+	if(!baue_strasse( (end+zv).get_2d(), NULL, false )) {
+		fprintf(stderr, "disconnecting bridge, can't drive off its end\n");
+	}
+	grund_t *dummy;
+	grund_t *gr = welt->lookup_kartenboden((end+zv).get_2d());
+	if(gr->get_neighbour(dummy, road_wt, ribi_t::rueckwaerts(direction))) {
+		fprintf(stderr, "new bridge is connected\n");
+	} else {
+		fprintf(stderr, "oh no, built a blocked bridge\n");
+	}
 
 	// Attempt to expand the city repeatedly in the bridge direction
 	bool reached_end_plus_2=false;
