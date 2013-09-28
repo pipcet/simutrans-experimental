@@ -3051,7 +3051,7 @@ void stadt_t::calc_growth()
 	}
 	fprintf(stderr, "\n");
 
-	for(int i=0; i<1; i++) {
+	for(int i=0; i<buildings.get_count(); i++) {
 	gebaeude_t *gb = welt->random_residential_building();
 	if(gb) {
 		stadt_t *city = gb->get_stadt();
@@ -3062,8 +3062,7 @@ void stadt_t::calc_growth()
 			//bev += 100;
 			if(!city->renovate_city_building(gb))
 			{
-				// XXX city->baue_near(gb)
-				city->baue(false);
+				city->baue_near(pos.get_2d());
 			}
 			// implement growth here
 		} else if(growth < 0) {
@@ -5770,7 +5769,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 	}
 
 	// good enough to renovate, and we found a building?
-	if (sum > 0 && h != NULL) 
+	if (/* sum > 0 && */ h != NULL)
 	{
 //		DBG_MESSAGE("stadt_t::renovate_city_building()", "renovation at %i,%i (%i level) of typ %i to typ %i with desire %i", k.x, k.y, alt_typ, want_to_have, sum);
 
