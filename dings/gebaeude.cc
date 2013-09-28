@@ -1468,12 +1468,12 @@ int gebaeude_t::growth_step()
 		//score--;
 	}
 
-	if(score >= 16*get_population()) {
-		score = 0;
+	if(score >= 2*get_population()) {
+		//score -= 2*get_population();
 		fprintf(stderr, "growth at <%d,%d>\n", this->get_pos().x, this->get_pos().y);
 		return 1;
-	} else if(score <= -16*get_population()) {
-		score = 0;
+	} else if(score <= -2*get_population()) {
+		score += 2*get_population();
 		fprintf(stderr, "shrinkage at <%d,%d>\n", this->get_pos().x, this->get_pos().y);
 		return -1;
 	}
