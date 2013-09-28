@@ -5753,6 +5753,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 		// Found no suitable building.  Return!
 		return false;
 	}
+#if 0
 	if (h->get_clusters() == 0) {
 		// This is a non-clustering building.  Do not allow it next to an identical building.
 		// (This avoids "boring cities", supposedly.)
@@ -5765,6 +5766,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 			}
 		}
 	}
+#
 
 	if (alt_typ != want_to_have) {
 		sum -= level * 10;
