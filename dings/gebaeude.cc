@@ -1469,7 +1469,7 @@ int gebaeude_t::growth_step()
 	}
 
 	if(score >= 2*get_population()) {
-		//score -= 2*get_population();
+		score -= 2*get_population();
 		fprintf(stderr, "growth at <%d,%d>\n", this->get_pos().x, this->get_pos().y);
 		return 1;
 	} else if(score <= -2*get_population()) {

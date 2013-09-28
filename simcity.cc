@@ -3146,7 +3146,7 @@ void stadt_t::step_grow_city()
 	bool stuck = false;
 
 	for (int i = 0; i < 30 && bev * 2 > won + arb + 100; i++) {
-		baue(false);
+		//baue(false);
 	}
 
 	// Hajo: let city grow in steps of 1
@@ -3158,7 +3158,7 @@ void stadt_t::step_grow_city()
 			int pre, post;
 			pre = won + arb + 100;
 			for (int i = 0; i < 10 && bev * 2 > won + arb + 100; i++) {
-				baue(false);
+				//baue(false);
 			}
 			post = won + arb + 100;
 			
@@ -5568,6 +5568,7 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 		// Found no suitable building.  Return!
 		return false;
 	}
+#if 0
 	if (h->get_clusters() == 0) {
 		// This is a non-clustering building.  Do not allow it next to an identical building.
 		// (This avoids "boring cities", supposedly.)
@@ -5580,6 +5581,7 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 			}
 		}
 	}
+#endif
 
 	if (alt_typ != want_to_have) {
 		sum -= level * 10;
