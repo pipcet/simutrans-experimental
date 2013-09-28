@@ -4411,7 +4411,7 @@ void karte_t::step_passengers_and_mail(long delta_t)
 	// TODO: Have these set from simuconf.tab (and calc_adjusted_monthly_figure, passenger_factor from legacy saves)
 	// These represent the number of passenger trips and units/packets/bundles of mail posted per unit
 	// of population or mail demand per month, divided by 100. NOTE: This excludes return and onward journeys.
-	const uint32 passenger_trips_per_workday = passenger_origins_weight*800 + 1;
+	const uint32 passenger_trips_per_workday = passenger_origins_weight*200 + 1;
 	const uint32 mail_packets_per_workday = mail_weight*40 + 1;
 
 	passenger_step_interval = get_ticks_per_workday() / passenger_trips_per_workday + 1;
