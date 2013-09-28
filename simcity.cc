@@ -6382,6 +6382,128 @@ void stadt_t::baue(bool new_town)
 	return;
 }
 
+	class compare_pos {
+		koord pos0;
+	public:
+		bool operator()(koord a, koord b) {
+			int da2 = (a.x-pos0.x)*(a.x-pos0.x) + (a.y-pos0.y)*(a.y-pos0.y);
+			int db2 = (b.x-pos0.x)*(b.x-pos0.x) + (b.y-pos0.y)*(b.y-pos0.y);
+
+			if(da2 != db2)
+			{
+				return da2 < db2;
+			} else {
+				if(a.x != b.x)
+				{
+					return a.x < b.x;
+				}
+				return a.y < b.y;
+			}
+		}
+
+		compare_pos(koord p)
+		{
+			pos0 = p;
+		}
+
+	};
+
+/**
+ * Enlarge a city by building another building or extending a road.
+ */
+bool stadt_t::baue_near(koord pos)
+{
+	int num_enlarge_tries = 4;
+	do {
+
+		// firstly, determine all potential candidate coordinates
+		vector_tpl<koord> candidates( (ur.x - lo.x + 1) * (ur.y - lo.y + 1) );
+		for(  sint16 j=pos.y-10;  j<=pos.y+10;  ++j  ) {
+			for(  sint16 i=pos.x-10;  i<=pos.x+10;  ++i  ) {
+				const koord k(i, j);
+				// do not build on any border tile
+				if(  !welt->is_within_limits( k+koord(1,1) )  ||  k.x<=0  ||  k.y<=0  ) {
+					continue;
+				}
+
+				// checks only make sense on empty ground
+				const grund_t *const gr = welt->lookup_kartenboden(k);
+				if(  gr==NULL  ||  !gr->ist_natur()  ) {
+					continue;
+				}
+				if(gr->get_pos().z <= welt->get_grundwasser()) {
+					if(!ribi_t::is_threeway(gr->get_grund_hang())) {
+						continue;
+					}
+				}
+
+				// a potential candidate coordinate
+				candidates.insert_ordered(k, compare_pos(pos));
+			}
+		}
+
+		fprintf(stderr, "candidates: ");
+		for(int i = 0; i < candidates.get_count(); i++) {
+			fprintf(stderr, "<%d,%d> ", candidates[i].x, candidates[i].y);
+		}
+		fprintf(stderr, "\n");
+		// loop until all candidates are exhausted or until we find a suitable location to build road or city building
+		while(  candidates.get_count()>0  ) {
+			const uint32 idx = 0;
+			const koord k = candidates[idx];
+
+			fprintf(stderr, "baue_near <%d,%d>; trying <%d,%d>\n",
+				pos.x, pos.y, k.x, k.y);
+
+			// we can stop after we have found a positive rule
+			best_strasse.reset(k);
+			const uint32 num_road_rules = road_rules.get_count();
+			uint32 offset = simrand(num_road_rules, "void stadt_t::baue");	// start with random rule
+			for (uint32 i = 0; i < num_road_rules  &&  !best_strasse.found(); i++) {
+				uint32 rule = ( i+offset ) % num_road_rules;
+				bewerte_strasse(k, 8 + road_rules[rule]->chance, *road_rules[rule]);
+			}
+			// ok => then built road
+			if (best_strasse.found()) {
+				baue_strasse(best_strasse.get_pos(), NULL, false);
+				INT_CHECK("simcity 5175");
+				return true;
+			}
+
+			// not good for road => test for house
+
+			// we can stop after we have found a positive rule
+			best_haus.reset(k);
+			const uint32 num_house_rules = house_rules.get_count();
+			offset = simrand(num_house_rules, "void stadt_t::baue");	// start with random rule
+			for (uint32 i = 0; i < num_house_rules  &&  !best_haus.found(); i++) {
+				uint32 rule = ( i+offset ) % num_house_rules;
+				bewerte_haus(k, 8 + house_rules[rule]->chance, *house_rules[rule]);
+			}
+			// one rule applied?
+			if (best_haus.found()) {
+				build_city_building(best_haus.get_pos(), false);
+				INT_CHECK("simcity 5192");
+				return true;
+			}
+
+			candidates.remove_at(idx, true);
+		}
+		// Oooh.  We tried every candidate location and we couldn't build.
+		// (Admittedly, this may be because percentage-chance rules told us not to.)
+		// Anyway, if this happened, enlarge the city limits and try again.
+		bool could_enlarge = enlarge_city_borders();
+		if (!could_enlarge) {
+			// Oh boy.  It's not possible to enlarge.  Seriously?
+			// I guess we'd better try merging this city into a neighbor (not implemented yet).
+			num_enlarge_tries = 0;
+		} else {
+			num_enlarge_tries--;
+		}
+	} while (num_enlarge_tries > 0);
+	return false;
+}
+
 vector_tpl<koord>* stadt_t::random_place(const karte_t* wl, const vector_tpl<sint32> *sizes_list, sint16 old_x, sint16 old_y)
 {
 	unsigned number_of_clusters = umgebung_t::number_of_clusters;

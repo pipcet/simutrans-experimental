@@ -489,6 +489,8 @@ private:
 
 	void baue(bool new_town);
 
+	bool baue_near(koord);
+
 	/**
 	 * @param pos position to check
 	 * @param regel the rule to evaluate
