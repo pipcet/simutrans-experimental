@@ -6383,31 +6383,33 @@ void stadt_t::baue(bool new_town)
 	return;
 }
 
-	class compare_pos {
-		koord pos0;
-	public:
-		bool operator()(koord a, koord b) {
-			int da2 = (a.x-pos0.x)*(a.x-pos0.x) + (a.y-pos0.y)*(a.y-pos0.y);
-			int db2 = (b.x-pos0.x)*(b.x-pos0.x) + (b.y-pos0.y)*(b.y-pos0.y);
+/* Oops. This is almost identical to class RelativeDistanceOrdering in
+ * fabrikbauer.cc, and should probably be merged. */
 
-			if(da2 != db2)
-			{
-				return da2 < db2;
-			} else {
-				if(a.x != b.x)
-				{
-					return a.x < b.x;
-				}
-				return a.y < b.y;
-			}
-		}
+class compare_pos {
+	koord pos0;
+public:
+	bool operator()(koord a, koord b) {
+		int da2 = (a.x-pos0.x)*(a.x-pos0.x) + (a.y-pos0.y)*(a.y-pos0.y);
+		int db2 = (b.x-pos0.x)*(b.x-pos0.x) + (b.y-pos0.y)*(b.y-pos0.y);
 
-		compare_pos(koord p)
+		if(da2 != db2)
 		{
-			pos0 = p;
+			return da2 < db2;
+		} else {
+			if(a.x != b.x)
+			{
+				return a.x < b.x;
+			}
+			return a.y < b.y;
 		}
+	}
 
-	};
+	compare_pos(koord p) {
+		pos0 = p;
+	}
+
+};
 
 /**
  * Enlarge a city by building another building or extending a road.
