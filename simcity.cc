@@ -5378,8 +5378,8 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 	int industrial_suitability, commercial_suitability, residential_suitability;
 	bewerte_res_com_ind(k, industrial_suitability, commercial_suitability, residential_suitability );
 
-	const int sum_industrial   = industrial_suitability  + employment_wanted - 1000000;
-	const int sum_commercial = commercial_suitability  + employment_wanted - 1000000;
+	const int sum_industrial   = industrial_suitability  + employment_wanted;
+	const int sum_commercial = commercial_suitability  + employment_wanted;
 	const int sum_residential   = residential_suitability + housing_wanted;
 
 	// does the timeline allow this building?
@@ -6314,18 +6314,10 @@ bool stadt_t::baue_near(koord pos)
 			}
 		}
 
-		fprintf(stderr, "candidates: ");
-		for(int i = 0; i < candidates.get_count(); i++) {
-			fprintf(stderr, "<%d,%d> ", candidates[i].x, candidates[i].y);
-		}
-		fprintf(stderr, "\n");
 		// loop until all candidates are exhausted or until we find a suitable location to build road or city building
 		while(  candidates.get_count()>0  ) {
 			const uint32 idx = 0;
 			const koord k = candidates[idx];
-
-			fprintf(stderr, "baue_near <%d,%d>; trying <%d,%d>\n",
-				pos.x, pos.y, k.x, k.y);
 
 			// we can stop after we have found a positive rule
 			best_strasse.reset(k);
