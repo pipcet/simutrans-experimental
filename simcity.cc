@@ -6286,12 +6286,16 @@ public:
 bool stadt_t::baue_near(koord pos)
 {
 	int num_enlarge_tries = 4;
+	int max_distance = 10;
 	do {
-
 		// firstly, determine all potential candidate coordinates
+
+		// This doesn't take into account city limits, and
+		// it's limited to a somewhat arbitrary square around
+		// pos.
 		vector_tpl<koord> candidates( (ur.x - lo.x + 1) * (ur.y - lo.y + 1) );
-		for(  sint16 j=pos.y-10;  j<=pos.y+10;  ++j  ) {
-			for(  sint16 i=pos.x-10;  i<=pos.x+10;  ++i  ) {
+		for(  sint16 j=pos.y-max_distance;  j<=pos.y+max_distance;  ++j  ) {
+			for(  sint16 i=pos.x-max_distance;  i<=pos.x+max_distance;  ++i  ) {
 				const koord k(i, j);
 				// do not build on any border tile
 				if(  !welt->is_within_limits( k+koord(1,1) )  ||  k.x<=0  ||  k.y<=0  ) {
