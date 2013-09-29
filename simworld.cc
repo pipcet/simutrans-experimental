@@ -5381,7 +5381,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 						// if the stop was not overcroweded.
 						if(found) 
 						{
-							ware_t return_pax(wtyp, ret_halt);
+							ware_t return_pax(wtyp, ret_halt, current_destination.location);
 							if(wtyp==warenbauer_t::post) 
 							{
 							// attractions/factory generate more mail than they recieve
