@@ -4595,7 +4595,8 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 		// (1) Percentage chance of (not) having any onward journeys at all.
 		// (2) If so, number of onward journeys.
 		// Mail does not make onward journeys.
-		const uint16 onward_trips = simrand(100, "void stadt_t::step_passagiere() (any onward trips?)") >= 75 && wtyp == warenbauer_t::passagiere ? simrand(max_onward_trips, "void stadt_t::step_passagiere() (how many onward trips?)") + 1 : 1;
+		uint16 onward_trips = simrand(100, "void stadt_t::step_passagiere() (any onward trips?)") >= 75 && wtyp == warenbauer_t::passagiere ? simrand(max_onward_trips, "void stadt_t::step_passagiere() (how many onward trips?)") + 1 : 1;
+		onward_trips = 1;
 
 		route_status = initialising;
 
