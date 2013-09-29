@@ -4615,21 +4615,21 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 					simrand(300, "karte_t::step_passengers_and_mail() (commuting or visiting trip?)") <= 200 ?
 					commuting_trip : visiting_trip :
 					mail_trip;
-		if (trip == commuting_trip) {
-			real_wtyp = warenbauer_t::commuters;
-		} else {
-			real_wtyp = wtyp;
-		}
+				if (trip == commuting_trip) {
+					real_wtyp = warenbauer_t::commuters;
+				} else {
+					real_wtyp = wtyp;
+				}
 
-					// Set here because we deduct the previous journey time from the tolerance for onward trips.
+				// Set here because we deduct the previous journey time from the tolerance for onward trips.
 
-					tolerance = 
+				tolerance = 
 					trip == mail_trip ? 
 					65535 : 
-						trip == commuting_trip ?
-						simrand_normal(range_commuting_tolerance, "karte_t::step_passengers_and_mail (commuting tolerance?)") + min_commuting_tolerance : 
-						/*trip == visiting_trip ? */
-						simrand_normal(range_visiting_tolerance, "karte_t::step_passengers_and_mail (visiting tolerance?)") + min_visiting_tolerance;
+					trip == commuting_trip ?
+					simrand_normal(range_commuting_tolerance, "karte_t::step_passengers_and_mail (commuting tolerance?)") + min_commuting_tolerance : 
+					/*trip == visiting_trip ? */
+					simrand_normal(range_visiting_tolerance, "karte_t::step_passengers_and_mail (visiting tolerance?)") + min_visiting_tolerance;
 			}
 			else
 			{
