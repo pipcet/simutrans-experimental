@@ -3249,7 +3249,7 @@ int karte_t::count_larger_cities(sint64 pop)
 	}
 	return count;
 }
-	
+
 stadt_t *karte_t::get_city(const koord pos) const
 {
 	stadt_t* city = NULL;
@@ -4777,7 +4777,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			best_bad_start_halt = 0;
 			too_slow_already_set = false;
 			overcrowded_already_set = false;
-		ware_t pax(real_wtyp);
+			ware_t pax(real_wtyp);
 			halthandle_t start_halt;
 			uint16 best_journey_time;
 			uint32 walking_time;
@@ -5133,16 +5133,16 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 
 			} // For loop (route_status)
 
-		bool set_return_trip;
-		switch(route_status)
-		{
-		case public_transport:
-		case on_foot:
-		case private_car:
-			set_return_trip = true;
-		default:
-			set_return_trip = false;
-		}
+			bool set_return_trip;
+			switch(route_status)
+			{
+			case public_transport:
+			case on_foot:
+			case private_car:
+				set_return_trip = true;
+			default:
+				set_return_trip = false;
+			}
 				 
 
 			switch(route_status)
@@ -5166,9 +5166,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 				{
 					haltestelle_t::erzeuge_fussgaenger(this, origin_pos_3d, pax_left_to_do);
 				}
-			if (trip == commuting_trip) {
-				current_destination.building->commuters_departed(pax_left_to_do);
-			}
+				if (trip == commuting_trip) {
+					current_destination.building->commuters_departed(pax_left_to_do);
+				}
 					
 				// Do nothing if trip == mail.
 				break;
@@ -5180,7 +5180,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 					tolerance -= car_minutes;
 				}
 					
-			stadt_t* destination_town;
+				stadt_t* destination_town;
 				destination_town = current_destination.type == town ? current_destination.building->get_stadt() : NULL;
 				city->set_private_car_trip(pax_left_to_do, destination_town);
 				city->merke_passagier_ziel(destination_pos, COL_TURQUOISE);
@@ -5236,24 +5236,24 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 				// TODO: Change the names of these from "local" and "non-local" to "commuting" and "visiting".
 				if(trip == commuting_trip)
 				{
-				first_origin->add_passengers_generated_local(-pax_left_to_do);
-				first_origin->growth_score(1);
-				//first_origin->add_passengers_succeeded_local(pax_left_to_do);
+					first_origin->add_passengers_generated_local(-pax_left_to_do);
+					first_origin->growth_score(1);
+					//first_origin->add_passengers_succeeded_local(pax_left_to_do);
 					if(current_destination.type == factory)
 					{
 						// Only add commuting passengers at a factory.
 						// TODO: Separate commuting/visiting trips for factories.
-					current_destination.building->get_fabrik()->liefere_an(real_wtyp, pax_left_to_do);
+						current_destination.building->get_fabrik()->liefere_an(real_wtyp, pax_left_to_do);
 					}
 
-				current_destination.building->commuters_departed(pax_left_to_do);
-				current_destination.building->commuters_arrived(pax_left_to_do);
+					current_destination.building->commuters_departed(pax_left_to_do);
+					current_destination.building->commuters_arrived(pax_left_to_do);
 				}
 				else if(trip == visiting_trip)
 				{
-				first_origin->add_passengers_generated_non_local(-pax_left_to_do);
-				first_origin->growth_score(1);
-				//first_origin->add_passengers_succeeded_non_local(pax_left_to_do);
+					first_origin->add_passengers_generated_non_local(-pax_left_to_do);
+					first_origin->growth_score(1);
+					//first_origin->add_passengers_succeeded_non_local(pax_left_to_do);
 				}
 				// Do nothing if trip == mail.
 				break;
@@ -5320,9 +5320,9 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 						start_halt->add_pax_no_route(pax_left_to_do);
 					}
 				}
-			};
+			}
 
-		set_return_trip = false;
+			set_return_trip = false;
 			if(set_return_trip)
 			{
 				// Calculate a return journey
@@ -6115,7 +6115,7 @@ int karte_t::count_commuters_to(koord pos)
 	FOR(slist_tpl<halthandle_t>, const s, haltestelle_t::get_alle_haltestellen()) {
 		count += s->count_commuters_to(pos);
 	}
-	
+
 	return count;
 }
 
