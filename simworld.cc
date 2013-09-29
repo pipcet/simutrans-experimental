@@ -5322,6 +5322,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			}
 			};
 
+		set_return_trip = false;
 			if(set_return_trip)
 			{
 				// Calculate a return journey
