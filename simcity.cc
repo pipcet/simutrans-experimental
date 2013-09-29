@@ -5766,7 +5766,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 			}
 		}
 	}
-#
+#endif
 
 	if (alt_typ != want_to_have) {
 		sum -= level * 10;
