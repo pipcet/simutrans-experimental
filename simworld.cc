@@ -4733,18 +4733,16 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			first_destination = find_destination(trip);
 			
 			// TODO: Change these variable names to something more fitting for this new system.
-			current_destination = first_destination;
-			first_destination = find_destination(trip);
 
 			if(trip == commuting_trip)
 			{
-				current_destination.building->add_passengers_generated_local(pax_left_to_do);
-				current_destination.building->growth_score(-1);
+				first_origin->add_passengers_generated_local(pax_left_to_do);
+				first_origin->growth_score(-1);
 			}
 			else if(trip == visiting_trip)
 			{
-				current_destination.building->add_passengers_generated_non_local(pax_left_to_do);
-				current_destination.building->growth_score(-1);
+				first_origin->add_passengers_generated_non_local(pax_left_to_do);
+				first_origin->growth_score(-1);
 			}
 			current_destination = first_destination;
 
@@ -4910,7 +4908,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 					// Check whether public transport can be used.
 					// Journey start information needs to be added later.
 					pax.reset();
-				pax.set_origin_pos(origin_pos);
+					pax.set_origin_pos(origin_pos);
 					pax.set_zielpos(destination_pos);
 					pax.menge = pax_left_to_do;
 					//"Menge" = volume (Google)
@@ -5383,7 +5381,7 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 						// if the stop was not overcroweded.
 						if(found) 
 						{
-							ware_t return_pax(wtyp, ret_halt, current_destination.location);
+							ware_t return_pax(wtyp, ret_halt, pax.get_zielpos());
 							if(wtyp==warenbauer_t::post) 
 							{
 							// attractions/factory generate more mail than they recieve
