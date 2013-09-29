@@ -4731,21 +4731,21 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 			
 			first_destination = find_destination(trip);
 			
-		// TODO: Change these variable names to something more fitting for this new system.
+			// TODO: Change these variable names to something more fitting for this new system.
 			current_destination = first_destination;
-		first_destination = find_destination(trip);
+			first_destination = find_destination(trip);
 
 			if(trip == commuting_trip)
 			{
-			current_destination.building->add_passengers_generated_local(pax_left_to_do);
-			current_destination.building->growth_score(-1);
+				current_destination.building->add_passengers_generated_local(pax_left_to_do);
+				current_destination.building->growth_score(-1);
 			}
 			else if(trip == visiting_trip)
 			{
-			current_destination.building->add_passengers_generated_non_local(pax_left_to_do);
-			current_destination.building->growth_score(-1);
+				current_destination.building->add_passengers_generated_non_local(pax_left_to_do);
+				current_destination.building->growth_score(-1);
 			}
-		current_destination = first_destination;
+			current_destination = first_destination;
 
 			// Do nothing if trip == mail_trip
 
@@ -5191,23 +5191,23 @@ void karte_t::generate_passengers_or_mail(const ware_besch_t * wtyp)
 				// TODO: Change the names of these from "local" and "non-local" to "commuting" and "visiting".
 				if(trip == commuting_trip)
 				{
-				first_origin->growth_score(1);
-				first_origin->add_passengers_generated_local(-pax_left_to_do);
-				//gb->add_passengers_succeeded_local(pax_left_to_do); XXX why gb, not first_origin?
+					first_origin->growth_score(1);
+					first_origin->add_passengers_generated_local(-pax_left_to_do);
+					//gb->add_passengers_succeeded_local(pax_left_to_do); XXX why gb, not first_origin?
 					if(current_destination.type == factory)
 					{
 						// Only add commuting passengers at a factory.
 						// TODO: Separate commuting/visiting trips for factories.
 						current_destination.building->get_fabrik()->liefere_an(wtyp, pax_left_to_do);
 					}
-				current_destination.building->commuters_departed(pax_left_to_do);
-				current_destination.building->commuters_arrived(pax_left_to_do);
+					current_destination.building->commuters_departed(pax_left_to_do);
+					current_destination.building->commuters_arrived(pax_left_to_do);
 				}
 				else if(trip == visiting_trip)
 				{
-				first_origin->add_passengers_generated_local(-pax_left_to_do);
-				first_origin->growth_score(1);
-//				gb->add_passengers_succeeded_non_local(pax_left_to_do);
+					first_origin->add_passengers_generated_local(-pax_left_to_do);
+					first_origin->growth_score(1);
+					//gb->add_passengers_succeeded_non_local(pax_left_to_do);
 				}
 				// Do nothing if trip == mail.
 				break;
