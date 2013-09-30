@@ -2370,7 +2370,9 @@ uint32 haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 						gb_dest = gr->get_depot();
 					}
 					if(gb_dest->get_first_tile() != gb_dest) {
+						// this happens after map rotation.
 						fprintf(stderr, "passengers to weird tile\n");
+						gb_dest = gb_dest->get_first_tile();
 					}
 						       
 					if(gb_dest)
