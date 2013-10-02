@@ -902,6 +902,12 @@ uint16 vehikel_t::unload_freight(halthandle_t halt, sint64 & revenue_from_unload
 								// to the origin city only *after* they arrive at their 
 								// destinations.
 								if(tmp.get_origin_pos() != koord::invalid) {
+									{
+									gebaeude_t *gb = welt->lookup(tmp.get_zielpos())->get_kartenboden()->find<gebaeude_t>();
+									if(gb) {
+										gb->growth_score(4*menge);
+									}
+									}
 									if(tmp.get_origin().is_bound()) {
 										tmp.get_origin()->add_pax_happy(menge);
 									}
