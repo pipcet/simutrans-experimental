@@ -1349,6 +1349,25 @@ void stadt_t::check_city_tiles(bool del)
 			}
 		}
 	}
+	if(del) {
+		for(int x = 0; x <= welt->get_size().x; x++)
+		{
+			for(int y = 0; y <= welt->get_size().y; y++)
+			{
+				const koord k(x, y);
+				// This can be called with garbage data, especially during loading
+				if(  welt->is_within_limits(k)  ) {
+					planquadrat_t* plan = welt->access(k);
+
+					if(plan->get_city() == this)
+					{
+						fprintf(stderr, "didn't catch city tile at <%d,%d>\n", x, y);
+						plan->set_city(NULL);
+					}
+				}
+			}
+		}
+	}
 }
 
 /**
