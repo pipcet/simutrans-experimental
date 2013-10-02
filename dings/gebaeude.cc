@@ -1437,6 +1437,16 @@ uint16 gebaeude_t::get_visitor_demand_per_workday() const
 	return get_visitor_demand();
 }
 
+int gebaeude_t::get_growth_score()
+{
+	return score;
+}
+
+void gebaeude_t::set_growth_score(int value)
+{
+	score = value;
+}
+
 void gebaeude_t::growth_score(int sc)
 {
 	score += sc;

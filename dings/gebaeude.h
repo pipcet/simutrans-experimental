@@ -153,6 +153,7 @@ private:
 	uint16 commuters_in_transit;
 
 	sint16 score;
+	bool can_grow_now;
 
 #ifdef INLINE_DING_TYPE
 protected:
@@ -329,6 +330,11 @@ public:
 
 	int growth_step();
 	void growth_score(int);
+	int get_growth_score();
+	void set_growth_score(int);
+
+	bool can_grow();
+	void set_can_grow(bool);
 
 private:
 	sint64 calc_available_jobs_by_time() const;
