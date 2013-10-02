@@ -5561,7 +5561,7 @@ gebaeude_t *stadt_t::downgrade_city_building(gebaeude_t* gb)
 	const haus_besch_t* h = NULL;
 	if (sum_commercial > sum_industrial && sum_commercial > sum_residential) {
 		// we must check, if we can really update to higher level ...
-		const int try_level = (alt_typ == gebaeude_t::gewerbe ? level + 1 : level);
+		const int try_level = (alt_typ == gebaeude_t::gewerbe ? level - 1 : level);
 		h = hausbauer_t::get_commercial(0, current_month, cl, false, neighbor_building_clusters);
 		if(  h != NULL  &&  h->get_level() <= try_level  &&  (max_level == 0 || h->get_level() <= max_level)  ) {
 			want_to_have = gebaeude_t::gewerbe;
@@ -5572,8 +5572,8 @@ gebaeude_t *stadt_t::downgrade_city_building(gebaeude_t* gb)
 	if(    (sum_industrial > sum_commercial  &&  sum_industrial > sum_residential)
       || (sum_commercial > sum_residential  &&  want_to_have == gebaeude_t::unbekannt)  ) {
 		// we must check, if we can really update to higher level ...
-		const int try_level = (alt_typ == gebaeude_t::industrie ? level + 1 : level);
-		h = hausbauer_t::get_industrial(0 , current_month, cl, false, neighbor_building_clusters);
+		const int try_level = (alt_typ == gebaeude_t::industrie ? level - 1 : level);
+		h = hausbauer_t::get_industrial(0, current_month, cl, false, neighbor_building_clusters);
 		if(  h != NULL  &&  h->get_level() <= try_level  &&  (max_level == 0 || h->get_level() <= max_level)  ) {
 			want_to_have = gebaeude_t::industrie;
 			sum = sum_industrial;
@@ -5582,9 +5582,13 @@ gebaeude_t *stadt_t::downgrade_city_building(gebaeude_t* gb)
 	// check for residence
 	// (sum_wohnung>sum_industrie  &&  sum_wohnung>sum_gewerbe
 	if (  want_to_have == gebaeude_t::unbekannt  ) {
-		// we must check, if we can really update to higher level ...
-		const int try_level = (alt_typ == gebaeude_t::wohnung ? level - 1 : level);
-		h = hausbauer_t::get_residential(0, current_month, cl, false, neighbor_building_clusters);
+		int try_level = (alt_typ == gebaeude_t::wohnung ? level - 1 : level);
+		do {
+			h = hausbauer_t::get_residential(try_level, current_month, cl, false, neighbor_building_clusters);
+			try_level--;
+		} while(try_level >= -1 && h == NULL);
+		try_level++;
+
 		if(  h != NULL  &&  h->get_level() <= try_level  &&  (max_level == 0 || h->get_level() <= max_level)  ) {
 			want_to_have = gebaeude_t::wohnung;
 			sum = sum_residential;
