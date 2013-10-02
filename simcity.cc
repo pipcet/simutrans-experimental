@@ -5850,6 +5850,7 @@ gebaeude_t *stadt_t::renovate_city_building(gebaeude_t* gb)
 		}
 
 		const int layout = get_best_layout(h, k);
+		int score = gb->get_growth_score();
 		// The building is being replaced.  The surrounding landscape may have changed since it was
 		// last built, and the new building should change height along with it, rather than maintain the old
 		// height.  So delete and rebuild, even though it's slower.
@@ -5861,6 +5862,7 @@ gebaeude_t *stadt_t::renovate_city_building(gebaeude_t* gb)
 		// so it must be valid.  Our borders also should not have changed.
 		new_gb->set_stadt(this);
 		add_building_to_list(new_gb);
+		new_gb->growth_score(score);
 		switch(want_to_have) {
 			case gebaeude_t::wohnung:   won += h->get_level() * 10; break;
 			case gebaeude_t::gewerbe:   arb += h->get_level() * 20; break;
