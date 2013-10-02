@@ -6477,18 +6477,10 @@ gebaeude_t *stadt_t::baue_near(koord pos)
 			}
 		}
 
-		fprintf(stderr, "candidates: ");
-		for(int i = 0; i < candidates.get_count(); i++) {
-			fprintf(stderr, "<%d,%d> ", candidates[i].x, candidates[i].y);
-		}
-		fprintf(stderr, "\n");
 		// loop until all candidates are exhausted or until we find a suitable location to build road or city building
 		while(  candidates.get_count()>0  ) {
 			const uint32 idx = 0;
 			const koord k = candidates[idx];
-
-			fprintf(stderr, "baue_near <%d,%d>; trying <%d,%d>\n",
-				pos.x, pos.y, k.x, k.y);
 
 			// we can stop after we have found a positive rule
 			best_strasse.reset(k);
