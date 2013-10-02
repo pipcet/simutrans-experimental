@@ -3835,7 +3835,7 @@ void karte_t::new_month()
 		total_electric_demand += s->get_power_demand();
 	}
 	fprintf(stderr, "\n");
-	//recheck_road_connexions = false;
+	recheck_road_connexions = false;
 
 	if(fabrikbauer_t::power_stations_available(this) && total_electric_demand && (((sint64)electric_productivity * 4000l) / total_electric_demand) < (sint64)get_settings().get_electric_promille())
 	{
