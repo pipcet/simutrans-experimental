@@ -3065,42 +3065,50 @@ void stadt_t::calc_growth()
 
 	wachstum = 0;
 
-	fprintf(stderr, "stadt %s buildings at ", get_name());
-	for(int i=0; i<buildings.get_count(); i++) {
-		fprintf(stderr, "<%d,%d> ",
-			buildings[i]->get_pos().x, buildings[i]->get_pos().y);
-	}
-	fprintf(stderr, "\n");
+	for(int i=buildings.get_count()-1; i>=0; i--) {
+		gebaeude_t *gb = buildings[i];
+		if(gb && gb->get_haustyp() == gebaeude_t::wohnung) {
+			stadt_t *city = gb->get_stadt();
+			int score = gb->get_growth_score();
+			koord3d pos = gb->get_pos();
 
-	for(int i=0; i<buildings.get_count(); i++) {
-	gebaeude_t *gb = welt->random_residential_building();
-	if(gb) {
-		stadt_t *city = gb->get_stadt();
-		int growth = gb->growth_step();
-		koord3d pos = gb->get_pos();
 
-		if(growth > 0) {
-			//bev += 100;
-			if(!city->renovate_city_building(gb))
-			{
-				city->baue_near(pos.get_2d());
-			}
-			// implement growth here
-		} else if(growth < 0) {
-			if(!city->downgrade_city_building(gb)) {
-				if(city->won > 10 * gb->get_tile()->get_besch()->get_level()) {
-					city->bev -= 10 * gb->get_tile()->get_besch()->get_level();
-					city->won -= 10 * gb->get_tile()->get_besch()->get_level();
-					hausbauer_t::remove(welt, besitzer_p /* XXX or NULL */, gb);
-					city->bev = city->won;
+			if(score >= gb->get_population()) {
+				int oldpop = gb->get_population();
+				gebaeude_t *new_gb = renovate_city_building(gb);
+				if(new_gb) {
+					int newpop = new_gb->get_population();
+
+					new_gb->set_growth_score(score - (newpop - oldpop));
+				} else {
+					gebaeude_t *new_gb = city->baue_near(pos.get_2d());
+
+					if(new_gb) {
+						int newpop = new_gb->get_population();
+
+						gb->set_growth_score(score - newpop);
+					} else {
+						gb->set_growth_score(0);
+					}
+
+
 				}
-			} else {
-				fprintf(stderr, "downgraded building at <%d,%d>\n",
-					pos.x, pos.y);
+			} else if(score <= -gb->get_population()) {
+				score = 0;
+				if(!city->downgrade_city_building(gb)) {
+					if(city->won > 10 * gb->get_tile()->get_besch()->get_level()) {
+						city->bev -= 10 * gb->get_tile()->get_besch()->get_level();
+						city->won -= 10 * gb->get_tile()->get_besch()->get_level();
+						hausbauer_t::remove(welt, besitzer_p /* XXX or NULL */, gb);
+						city->bev = city->won;
+					}
+				} else {
+					fprintf(stderr, "downgraded building at <%d,%d>\n",
+						pos.x, pos.y);
+				}
 			}
-		}
 		
-	}
+		}
 	}
 
 	//fprintf(stderr, "%sp1 %lld p2 %lld = %lld - %lld - %lld - %lld w %d bev %d won %d arb %d %s density %lld larger %d %lld\n\r", wachstum > 0 ? "+" : (wachstum == -16*bev ? " " : ","), p1, p2, city_history_month[0][HIST_PAS_GENERATED], city_history_month[0][HIST_PAS_TRANSPORTED], city_history_month[0][HIST_PAS_WALKED], city_history_month[0][HIST_CITYCARS], wachstum/16, bev, won, arb, this->get_name(), density, larger_towns, (long long)welt->last_month_bev);
