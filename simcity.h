@@ -485,11 +485,11 @@ private:
 	 *
 	 * @author Hj. Malthaner, V. Meyer
 	 */
-	bool baue_strasse(const koord k, spieler_t *sp, bool forced);
+	weg_t *baue_strasse(const koord k, spieler_t *sp, bool forced);
 
 	void baue(bool new_town);
 
-	gebaeude_t *baue_near(koord);
+	ding_t *baue_near(koord);
 
 	/**
 	 * @param pos position to check

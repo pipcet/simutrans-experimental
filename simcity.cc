@@ -3081,14 +3081,18 @@ void stadt_t::calc_growth()
 
 					new_gb->set_growth_score(score - (newpop - oldpop));
 				} else {
-					gebaeude_t *new_gb = city->baue_near(pos.get_2d());
+					ding_t *new_ding = city->baue_near(pos.get_2d());
+					gebaeude_t *new_gb = ding_cast<gebaeude_t>(new_ding);
 
 					if(new_gb) {
 						int newpop = new_gb->get_population();
 
 						gb->set_growth_score(score - newpop);
-					} else {
-						gb->set_growth_score(0);
+					} else if(!new_ding) {
+						gb->set_growth_score(score - 1);
+					}
+					if(new_ding) {
+						return;
 					}
 
 
@@ -5495,6 +5499,8 @@ gebaeude_t *stadt_t::build_city_building(const koord k, bool new_town)
 		return gb;
 
 	}
+
+	return NULL;
 }
 
 
@@ -6093,23 +6099,23 @@ bool stadt_t::build_bridge(grund_t* bd, ribi_t::ribi direction) {
  *
  * @author Hj. Malthaner, V. Meyer
  */
-bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
+weg_t *stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 {
 	grund_t* bd = welt->lookup_kartenboden(k);
 
 	if (bd->get_typ() != grund_t::boden) {
 		// not on water, monorails, foundations, tunnel or bridges
-		return false;
+		return NULL;
 	}
 
 	// we must not built on water or runways etc.
 	if(  bd->hat_wege()  &&  !bd->hat_weg(road_wt)  &&  !bd->hat_weg(track_wt)  ) {
-		return false;
+		return NULL;
 	}
 
 	// somebody else's things on it?
 	if(  bd->kann_alle_obj_entfernen(NULL)  ) {
-		return false;
+		return NULL;
 	}
 
 	// dwachs: If not able to built here, try to make artificial slope
@@ -6122,7 +6128,7 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 			welt->ebne_planquadrat(NULL, k, bd->get_hoehe());
 		}
 		else {
-			return false;
+			return NULL;
 		}
 	}
 
@@ -6155,7 +6161,7 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 			ribi_t::ribi r = sch->get_ribi_unmasked();
 			if (!ribi_t::ist_gerade(r)) {
 				// no building on crossings, curves, dead ends
-				return false;
+				return NULL;
 			}
 			// just the other directions are allowed
 			allowed_dir &= ~r;
@@ -6230,9 +6236,9 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 	}
 
 	if (connection_roads != ribi_t::keine || forced) {
-
+		strasse_t* weg = NULL;
 		if (!bd->weg_erweitern(road_wt, connection_roads)) {
-			strasse_t* weg = new strasse_t(welt);
+			weg = new strasse_t(welt);
 			// Hajo: city roads should not belong to any player => so we can ignore any construction costs ...
 			weg->set_besch(welt->get_city_road());
 			weg->set_gehweg(true);
@@ -6249,9 +6255,9 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 				build_bridge(bd, direction);
 			}
 		}
-		return true;
+		return weg;
 	}
-	return false;
+	return NULL;
 }
 
 
@@ -6452,15 +6458,15 @@ public:
 /**
  * Enlarge a city by building another building or extending a road.
  */
-gebaeude_t *stadt_t::baue_near(koord pos)
+ding_t *stadt_t::baue_near(koord pos)
 {
 	int num_enlarge_tries = 0;
 	do {
 
 		// firstly, determine all potential candidate coordinates
 		vector_tpl<koord> candidates( (ur.x - lo.x + 1) * (ur.y - lo.y + 1) );
-		for(  sint16 j=pos.y-3;  j<=pos.y+3;  ++j  ) {
-			for(  sint16 i=pos.x-3;  i<=pos.x+3;  ++i  ) {
+		for(  sint16 j=pos.y-30;  j<=pos.y+30;  ++j  ) {
+			for(  sint16 i=pos.x-30;  i<=pos.x+30;  ++i  ) {
 				const koord k(i, j);
 				// do not build on any border tile
 				if(  !welt->is_within_limits( k+koord(1,1) )  ||  k.x<=0  ||  k.y<=0  ) {
@@ -6498,9 +6504,9 @@ gebaeude_t *stadt_t::baue_near(koord pos)
 			}
 			// ok => then built road
 			if (best_strasse.found()) {
-				baue_strasse(best_strasse.get_pos(), NULL, false);
+				ding_t *ding = baue_strasse(best_strasse.get_pos(), NULL, false);
 				INT_CHECK("simcity 5175");
-				return NULL;
+				return ding;
 			}
 
 			// not good for road => test for house
