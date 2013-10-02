@@ -5349,26 +5349,26 @@ int stadt_t::get_best_layout(const haus_besch_t* h, const koord & k) const {
 }
 
 
-void stadt_t::build_city_building(const koord k, bool new_town)
+gebaeude_t *stadt_t::build_city_building(const koord k, bool new_town)
 {
 	grund_t* gr = welt->lookup_kartenboden(k);
 	if (!gr)
 	{
-		return;
+		return NULL;
 	}
 	const koord3d pos(gr->get_pos());
 
 	// Not building on ways (this was actually tested before be the cityrules), btu you can construct manually
 	if(  !gr->ist_natur() ) {
-		return;
+		return NULL;
 	}
 	// again, should not happen ...
 	if( gr->kann_alle_obj_entfernen(NULL) != NULL ) {
-		return;
+		return NULL;
 	}
 	// Refuse to build on a slope, when there is a groudn right on top of it (=> the house would sit on the bridge then!)
 	if(  gr->get_grund_hang() != hang_t::flach  &&  welt->lookup(koord3d(k, welt->max_hgt(k))) != NULL  ) {
-		return;
+		return NULL;
 	}
 
 	// Divide unemployed by 4, because it counts towards commercial and industrial,
@@ -5425,7 +5425,7 @@ void stadt_t::build_city_building(const koord k, bool new_town)
 
 	if (h == NULL) {
 		// Found no suitable building.  Return!
-		return;
+		return NULL;
 	}
 //	if (h->get_clusters() == 0) {
 //		// This is a non-clustering building.  Do not allow it next to an identical building.
@@ -5492,20 +5492,21 @@ void stadt_t::build_city_building(const koord k, bool new_town)
 		case gebaeude_t::industrie: arb += h->get_level() * 20; fprintf(stderr, "built i\n"); break;
 			default: break;
 		}
+		return gb;
 
 	}
 }
 
 
-bool stadt_t::downgrade_city_building(gebaeude_t* gb)
+gebaeude_t *stadt_t::downgrade_city_building(gebaeude_t* gb)
 {
 	const gebaeude_t::typ alt_typ = gb->get_haustyp();
 	if (  alt_typ == gebaeude_t::unbekannt  ) {
-		return false; // only renovate res, com, ind
+		return NULL; // only renovate res, com, ind
 	}
 
 	if (  gb->get_tile()->get_besch()->get_b()*gb->get_tile()->get_besch()->get_h() !=1  ) {
-		return false; // too big ...
+		return NULL; // too big ...
 	}
 
 	// Now we are sure that this is a city building
@@ -5595,7 +5596,7 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 
 	if (h == NULL) {
 		// Found no suitable building.  Return!
-		return false;
+		return NULL;
 	}
 #if 0
 	if (h->get_clusters() == 0) {
@@ -5606,7 +5607,7 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 			const gebaeude_t* neighbor_gb = get_citybuilding_at(k + neighbors[i]);
 			if (neighbor_gb != NULL && neighbor_gb->get_tile()->get_besch() == h) {
 				// Fail.  Return.
-				return false;
+				return NULL;
 			}
 		}
 	}
@@ -5677,20 +5678,20 @@ bool stadt_t::downgrade_city_building(gebaeude_t* gb)
 			case gebaeude_t::industrie: arb += h->get_level() * 20; break;
 			default: break;
 		}
-		return true;
+		return new_gb;
 	}
-	return false;
+	return NULL;
 }
 
-bool stadt_t::renovate_city_building(gebaeude_t* gb)
+gebaeude_t *stadt_t::renovate_city_building(gebaeude_t* gb)
 {
 	const gebaeude_t::typ alt_typ = gb->get_haustyp();
 	if (  alt_typ == gebaeude_t::unbekannt  ) {
-		return false; // only renovate res, com, ind
+		return NULL; // only renovate res, com, ind
 	}
 
 	if (  gb->get_tile()->get_besch()->get_b()*gb->get_tile()->get_besch()->get_h() !=1  ) {
-		return false; // too big ...
+		return NULL; // too big ...
 	}
 
 	// Now we are sure that this is a city building
@@ -5780,7 +5781,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 
 	if (h == NULL) {
 		// Found no suitable building.  Return!
-		return false;
+		return NULL;
 	}
 #if 0
 	if (h->get_clusters() == 0) {
@@ -5791,7 +5792,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 			const gebaeude_t* neighbor_gb = get_citybuilding_at(k + neighbors[i]);
 			if (neighbor_gb != NULL && neighbor_gb->get_tile()->get_besch() == h) {
 				// Fail.  Return.
-				return false;
+				return NULL;
 			}
 		}
 	}
@@ -5862,9 +5863,9 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb)
 			case gebaeude_t::industrie: arb += h->get_level() * 20; break;
 			default: break;
 		}
-		return true;
+		return new_gb;
 	}
-	return false;
+	return NULL;
 }
 
 void stadt_t::add_building_to_list(gebaeude_t* building, bool ordered)
@@ -6445,15 +6446,15 @@ public:
 /**
  * Enlarge a city by building another building or extending a road.
  */
-bool stadt_t::baue_near(koord pos)
+gebaeude_t *stadt_t::baue_near(koord pos)
 {
-	int num_enlarge_tries = 4;
+	int num_enlarge_tries = 0;
 	do {
 
 		// firstly, determine all potential candidate coordinates
 		vector_tpl<koord> candidates( (ur.x - lo.x + 1) * (ur.y - lo.y + 1) );
-		for(  sint16 j=pos.y-10;  j<=pos.y+10;  ++j  ) {
-			for(  sint16 i=pos.x-10;  i<=pos.x+10;  ++i  ) {
+		for(  sint16 j=pos.y-3;  j<=pos.y+3;  ++j  ) {
+			for(  sint16 i=pos.x-3;  i<=pos.x+3;  ++i  ) {
 				const koord k(i, j);
 				// do not build on any border tile
 				if(  !welt->is_within_limits( k+koord(1,1) )  ||  k.x<=0  ||  k.y<=0  ) {
@@ -6501,7 +6502,7 @@ bool stadt_t::baue_near(koord pos)
 			if (best_strasse.found()) {
 				baue_strasse(best_strasse.get_pos(), NULL, false);
 				INT_CHECK("simcity 5175");
-				return true;
+				return NULL;
 			}
 
 			// not good for road => test for house
@@ -6516,9 +6517,9 @@ bool stadt_t::baue_near(koord pos)
 			}
 			// one rule applied?
 			if (best_haus.found()) {
-				build_city_building(best_haus.get_pos(), false);
+				gebaeude_t *gb = build_city_building(best_haus.get_pos(), false);
 				INT_CHECK("simcity 5192");
-				return true;
+				return gb;
 			}
 
 			candidates.remove_at(idx, true);
