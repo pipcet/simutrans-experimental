@@ -52,6 +52,7 @@
 #include "dataobj/environment.h"
 
 #include "sucher/bauplatz_sucher.h"
+#include "sucher/destructive_location_finder.h"
 #include "bauer/wegbauer.h"
 #include "bauer/brueckenbauer.h"
 #include "bauer/hausbauer.h"
@@ -889,9 +890,10 @@ void stadt_t::cityrules_rdwr(loadsave_t *file)
  *
  * @author V. Meyer
  */
-class denkmal_platz_sucher_t : public platzsucher_t {
+class denkmal_platz_sucher_t : public destructive_location_finder_t {
 	public:
-		denkmal_platz_sucher_t(karte_t* welt, sint16 radius) : platzsucher_t(welt, radius) {}
+		stadt_t *city;
+		denkmal_platz_sucher_t(karte_t* welt, sint64 max_cost, sint16 radius) : destructive_location_finder_t(welt, max_cost, radius) {}
 
 		virtual bool ist_feld_ok(koord pos, koord d, climate_bits cl) const
 		{
@@ -956,8 +958,14 @@ class denkmal_platz_sucher_t : public platzsucher_t {
 
 			return true;
 		}
-};
 
+		virtual sint64 tile_cost(koord pos, koord d, climate_bits cl) const
+		{
+			sint64 land_value = welt->get_land_value(welt->lookup_kartenboden(pos)->get_pos());
+
+			return -land_value;
+		}
+};
 
 /**
  * rathausplatz_sucher_t:
@@ -3083,7 +3091,7 @@ void stadt_t::check_bau_spezial(bool new_town)
 		if (besch) {
 			koord total_size = koord(2 + besch->get_b(), 2 + besch->get_h());
 			sint16 radius = koord_distance( get_rechtsunten(), get_linksoben() )/2 + 10;
-			koord best_pos(denkmal_platz_sucher_t(welt, radius).suche_platz(pos, total_size.x, total_size.y, besch->get_allowed_climate_bits()));
+			koord best_pos(denkmal_platz_sucher_t(welt, 10000000, radius).suche_platz(pos, total_size.x, total_size.y, besch->get_allowed_climate_bits()));
 
 			if (best_pos != koord::invalid) {
 				// check if borders around the monument are inside the map limits
