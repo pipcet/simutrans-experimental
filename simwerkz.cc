@@ -2384,6 +2384,13 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	const ribi_t::ribi ribi_mark = ribi_typ(end-start);
 	const koord zv(ribi_mark);
 	const bruecke_besch_t *besch = brueckenbauer_t::get_besch(default_param);
+	const char *error;
+	koord3d end2 = brueckenbauer_t::finde_ende(sp, start, zv, besch, error, false, koord_distance(start, end));
+
+	if (end != end2) {
+		fprintf(stderr, "uh, what?\n");
+	}
+
 	sint64 costs = 0;
 	// start
 	grund_t *gr = welt->lookup(start);
@@ -2393,7 +2400,10 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	// single height -> height is 1
 	// double height -> height is 2
 	const hang_t::typ slope = gr->get_grund_hang();
-	const uint8 max_height = slope ? ((slope & 7) ? 1 : 2) : (besch->has_double_ramp()?2:1);
+	uint8 max_height = slope ?  hang_t::max_diff(slope) : (besch->has_double_ramp() ? 2 : 1);
+	if(end.z + 2 < start.z + max_height) {
+		max_height = end.z + 2 - start.z;
+	}
 
 	zeiger_t *way = new zeiger_t(start, sp );
 	const bruecke_besch_t::img_t img0 = besch->get_end( slope, slope, hang_typ(zv)*max_height );
@@ -2575,7 +2585,7 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 
 		// check whether we can build a bridge here
 		const char *error = NULL;
-		koord3d end = brueckenbauer_t::finde_ende(sp, start, koord(test), besch, error, false, koord_distance(start, pos));
+ 		koord3d end = brueckenbauer_t::finde_ende(sp, start, koord(test), besch, error, false, koord_distance(start, pos));
 		if (end!=pos) {
 			return 0;
 		}

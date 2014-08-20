@@ -30,6 +30,8 @@ private:
 
 	static karte_ptr_t welt;
 
+	static bool is_blocked(koord3d pos, spieler_t *sp, const bruecke_besch_t *besch, const char *&error_msg);
+	static bool is_monorail_junction(koord3d pos, spieler_t *sp, const bruecke_besch_t *besch, const char *&error_msg);
 public:
 	/**
 	 * Finds the position of the end of the bridge. Does all kind of checks.
