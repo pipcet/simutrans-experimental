@@ -2392,9 +2392,7 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	sint8 bridge_height;
 	koord3d end2 = brueckenbauer_t::finde_ende(sp, start, zv, besch, error, bridge_height, false, koord_distance(start, end));
 
-	if (end != end2) {
-		fprintf(stderr, "uh, what?\n");
-	}
+	assert(end == end2);
 
 	sint64 costs = 0;
 	// start

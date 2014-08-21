@@ -370,27 +370,10 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 			return koord3d::invalid;
 		}
 
-		// and if ground is above bridge / double slopes
-		if (height < -1) {
-			break; // to trigger the right error message
-		}
-
 		if(  gr->hat_weg(air_wt)  &&  gr->get_styp(air_wt)==1  ) {
 			// sytem_type==1 is runway
 			error_msg = "No bridges over runways!";
 			return koord3d::invalid;
-		}
-
-		//  Check for buildings underneath that exceed the bridge's level limit
-		if( const grund_t* gr = welt->lookup(pos) ) {
-			if (const gebaeude_t* gb = gr->find<gebaeude_t>()) {
-				const uint8 max_level = welt->get_settings().get_max_elevated_way_building_level();
-				if( gb->get_tile()->get_besch()->get_level() > max_level && !haltestelle_t::get_halt(gb->get_pos(), NULL).is_bound())
-				{
-					error_msg = "Bridges cannot be built over large buildings.";
-					return koord3d::invalid;
-				}
-			}
 		}
 
 		bool abort = true;
@@ -421,6 +404,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		if(hang_height < min_height) {
 			continue;
 		}
+		// now check for end of bridge conditions
 		if(length >= min_length && hang_t::ist_wegbar(end_slope) && gr->get_typ()==grund_t::boden) {
 			if(end_slope == hang_t::flach && hang_height == max_height) {
 				/* now we have a flat tile below */
@@ -431,7 +415,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					error_msg = "A bridge must start on a way!";
 				}
 
-				if(  !error_msg  ||  !*error_msg) {
+				if(  !error_msg  ||  (!*error_msg && (hang_height == max_height || ai_bridge || min_length)) ) {
 					// success
 					debug_profile();
 					return gr->get_pos();
@@ -497,6 +481,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					}
 				}
 			}
+			// slope, which ends too low => we can continue
 		}
 
 		// something in the way ...
@@ -679,7 +664,7 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 		// needs a ramp to start on ground
 		add_height = slope ?  hang_t::max_diff(slope) : bridge_height;
 		if(end.z + 2 < start.z + add_height) {
-			max_height = end.z + 2 - start.z;
+			add_height = end.z + 2 - start.z;
 		}
 		baue_auffahrt( sp, start, ribi, slope?0:hang_typ(zv)*add_height, besch );
 	}
