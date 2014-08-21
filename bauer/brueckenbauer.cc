@@ -379,7 +379,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		for(sint8 z = min_bridge_height; z <= max_height; z++) {
 			if(height_okay(z)) {
 				if(is_blocked(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
-					fprintf(stderr, "excluding height %d\n", (int)z);
 					height_okay_array[z-min_bridge_height] = false;
 				} else if(is_monorail_junction(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
 					gr = welt->lookup(koord3d(pos.get_2d(), z));
