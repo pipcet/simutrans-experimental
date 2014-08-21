@@ -248,9 +248,6 @@ bool brueckenbauer_t::is_blocked(koord3d pos, spieler_t *sp, const bruecke_besch
 			// not through bridges
 			return true;
 		}
-		else {
-			return true;
-		}
 	}
 
 	return false;
