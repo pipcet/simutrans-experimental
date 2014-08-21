@@ -414,7 +414,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					error_msg = "A bridge must start on a way!";
 				}
 
-				if(  !error_msg  ||  (!*error_msg && (hang_height == max_height || ai_bridge || min_length)) ) {
+				if(  !error_msg  ||  (!*error_msg) ) {
 					// success
 					set_bridge_height();
 					return gr->get_pos();
