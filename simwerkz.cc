@@ -2404,9 +2404,6 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	// double height -> height is 2
 	const hang_t::typ slope = gr->get_grund_hang();
 	uint8 max_height = slope ?  hang_t::max_diff(slope) : bridge_height;
-	if(end.z + 2 < start.z + max_height) {
-		max_height = end.z + 2 - start.z;
-	}
 
 	zeiger_t *way = new zeiger_t(start, sp );
 	const bruecke_besch_t::img_t img0 = besch->get_end( slope, slope, hang_typ(zv)*max_height );
