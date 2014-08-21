@@ -418,7 +418,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					// success
 					set_bridge_height();
 					return gr->get_pos();
-				} else {
+				} else if (*error_msg) {
 					// this is an real error
 					return koord3d::invalid;
 				}
