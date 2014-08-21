@@ -280,7 +280,6 @@ bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bru
 }
 
 #define set_bridge_height() do { if (height_okay(max_height)) { bridge_height = 2; } else if (height_okay(max_height-1)) { bridge_height = 1; } else { assert(false); } } while(0)
-#define debug_profile() do { set_bridge_height(); for(int z=min_bridge_height; z<=max_height; z++) { fprintf(stderr, "height %d [%d] %s\n", z, z-start_height, height_okay(z) ? "okay" : "not okay"); } fprintf(stderr, "bridge height %d\n", bridge_height); } while(0)
 #define height_okay(h) (((h) < min_bridge_height || (h) > max_height) ? false : height_okay_array[h-min_bridge_height])
 
 koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length )
@@ -384,7 +383,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					height_okay_array[z-min_bridge_height] = false;
 				} else if(is_monorail_junction(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
 					gr = welt->lookup(koord3d(pos.get_2d(), z));
-					debug_profile();
+					set_bridge_height();
 					return gr->get_pos();
 				} else {
 					abort = false;
@@ -417,7 +416,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 
 				if(  !error_msg  ||  (!*error_msg && (hang_height == max_height || ai_bridge || min_length)) ) {
 					// success
-					debug_profile();
+					set_bridge_height();
 					return gr->get_pos();
 				} else {
 					// this is an real error
@@ -437,7 +436,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
 					if(  !error_msg  ||  !*error_msg  ) {
 						// success
-						debug_profile();
+ 						set_bridge_height();
 						return gr->get_pos();
 					}
 					else {
@@ -463,7 +462,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 							height_okay_array[z-min_bridge_height] = false;
 						}
 						// success
-						debug_profile();
+						set_bridge_height();
 						return gr->get_pos();
 					}
 
@@ -476,7 +475,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 							height_okay_array[z-min_bridge_height] = false;
 						}
 						// in the way, or find shortest and empty => ok
-						debug_profile();
+						set_bridge_height();
 						return gr->get_pos();
 					}
 				}
