@@ -2953,7 +2953,7 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 					// try to find shortest possible
 					end = brueckenbauer_t::finde_ende(NULL, bd->get_pos(), zv, bridge, err, bridge_height, true);
 				}
-				if(err==NULL  &&   koord_distance( k, end.get_2d())<=3) {
+				if((err==NULL||*err == 0)  &&   koord_distance( k, end.get_2d())<=3) {
 					brueckenbauer_t::baue_bruecke(NULL, bd->get_pos(), end, zv, bridge_height, bridge, welt->get_city_road());
 					// try to build one connecting piece of road
 					baue_strasse( (end+zv).get_2d(), NULL, false);
