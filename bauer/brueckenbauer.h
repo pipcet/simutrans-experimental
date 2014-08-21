@@ -44,6 +44,7 @@ public:
 	 * @param zv   desired direction of the bridge
 	 * @param besch the description of the bridge
 	 * @param error_msg an error message when the search fails.
+	 * @param bridge_height on success, the height of the bridge that we can build
 	 * @param ai_bridge if this bridge is being built by an AI
 	 * @param min_length the minimum length of the bridge.
 	 * @return the position of the other end of the bridge or koord3d::invalid if no possible end is found
