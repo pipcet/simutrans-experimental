@@ -296,7 +296,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 	// double height -> height is 2
 	const hang_t::typ slope = gr2->get_grund_hang();
 	const sint8 start_height = gr2->get_hoehe() + hang_t::max_diff(slope);
-	const sint8 min_bridge_height = start_height + (slope==0);
+	sint8 min_bridge_height = start_height + (slope==0);
 	sint8 min_height = start_height - (1+besch->has_double_ramp()) + (slope==0);
 	sint8 max_height = start_height + (slope ? 0 : (1+besch->has_double_ramp()));
 
@@ -314,6 +314,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		}
 		max_height = start_height;
 		min_height = max_height - (1+besch->has_double_ramp());
+		min_bridge_height = min_height;
 	}
 	bool height_okay_array[max_height+1 - min_bridge_height];
 	for (int i = 0; i < max_height+1 - min_bridge_height; i++) {
