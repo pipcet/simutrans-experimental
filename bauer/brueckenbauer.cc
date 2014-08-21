@@ -228,8 +228,6 @@ const char *check_tile( const grund_t *gr, const spieler_t *sp, waytype_t wt, ri
 
 bool brueckenbauer_t::is_blocked(koord3d pos, spieler_t *sp, const bruecke_besch_t *besch, const char *&error_msg)
 {
-	sint8 z = pos.z;
-
 	// first check for elevated ground exactly in our height
 	if(  grund_t *gr2 = welt->lookup( pos )  ) {
 		if(  gr2->get_typ() == grund_t::monorailboden  ) {
@@ -260,8 +258,6 @@ bool brueckenbauer_t::is_blocked(koord3d pos, spieler_t *sp, const bruecke_besch
 
 bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bruecke_besch_t *besch, const char *&error_msg)
 {
-	sint8 z = pos.z;
-
 	// first check for elevated ground exactly in our height
 	if(  grund_t *gr2 = welt->lookup( pos )  ) {
 		if(  gr2->get_typ() == grund_t::monorailboden  ) {
