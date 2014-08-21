@@ -283,7 +283,10 @@ bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bru
 	return false;
 }
 
-koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, bool ai_bridge, uint32 min_length )
+#define set_bridge_height() do { if (height_okay[max_height-min_height]) { bridge_height = 2; } else if (height_okay[max_height-min_height-1]) { bridge_height = 1; } else { assert(false); } } while(0)
+#define debug_profile() do { set_bridge_height(); for(int z=min_height; z<=max_height; z++) { fprintf(stderr, "height %d [%d] %s\n", z, z-start_height, height_okay[z-min_height] ? "okay" : "not okay"); } fprintf(stderr, "bridge height %d\n", bridge_height); } while(0)
+
+koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length )
 {
 	const grund_t *gr2 = welt->lookup( pos );
 	if(  !gr2  ) {
@@ -396,6 +399,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					fprintf(stderr, "excluding height %d\n", (int)z);
 					height_okay[z-min_height] = false;
 				} else if(is_monorail_junction(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
+					debug_profile();
 					return koord3d(pos.get_2d(), z);
 				} else {
 					abort = false;
@@ -427,6 +431,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 
 				if(  !error_msg  ) {
 					// success
+					debug_profile();
 					return gr->get_pos();
 				}
 
@@ -435,6 +440,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					return koord3d::invalid;
 				}
 
+				debug_profile();
 				return gr->get_pos();
 			} else if(  hang_height == max_height  ) {
 				// here is a slope that ends at the bridge height
@@ -450,6 +456,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
 					if(  !error_msg  ||  !*error_msg  ) {
 						// success
+						debug_profile();
 						return gr->get_pos();
 					}
 					else {
@@ -472,6 +479,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 
 					if(  !error_msg  ) {
 						// success
+						debug_profile();
 						return gr->get_pos();
 					}
 
@@ -481,6 +489,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 					// from here no real error (only "")
 					if(  (ai_bridge  ||  min_length)  ) {
 						// in the way, or find shortest and empty => ok
+						debug_profile();
 						return gr->get_pos();
 					}
 				}
@@ -608,7 +617,8 @@ const char *brueckenbauer_t::baue( spieler_t *sp, const koord3d pos, const bruec
 	zv = koord(ribi_t::rueckwaerts(ribi));
 	// search for suitable bridge end tile
 	const char *msg;
-	koord3d end = finde_ende(sp, gr->get_pos(), zv, besch, msg );
+	sint8 bridge_height;
+	koord3d end = finde_ende(sp, gr->get_pos(), zv, besch, msg, bridge_height );
 
 	// found something?
 	if(  koord3d::invalid == end  ) {
@@ -634,16 +644,16 @@ DBG_MESSAGE("brueckenbauer_t::baue()", "end not ok");
 
 	// Start and end have been checked, we can start to build eventually
 	if(besch->get_waytype()==powerline_wt) {
-		baue_bruecke(sp, gr->get_pos(), end, zv, besch, lt->get_besch() );
+		baue_bruecke(sp, gr->get_pos(), end, zv, bridge_height, besch, lt->get_besch() );
 	}
 	else {
-		baue_bruecke(sp, gr->get_pos(), end, zv, besch, weg->get_besch() );
+		baue_bruecke(sp, gr->get_pos(), end, zv, bridge_height, besch, weg->get_besch() );
 	}
 	return NULL;
 }
 
 
-void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koord3d end, koord zv, const bruecke_besch_t *besch, const weg_besch_t *weg_besch)
+void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koord3d end, koord zv, sint8 bridge_height, const bruecke_besch_t *besch, const weg_besch_t *weg_besch)
 {
 	ribi_t::ribi ribi = ribi_typ(zv);
 
@@ -664,7 +674,7 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 
 	if(  start_gr->ist_karten_boden()  ) {
 		// needs a ramp to start on ground
-		add_height = slope ?  hang_t::max_diff(slope) : (1+besch->has_double_ramp());
+		add_height = slope ?  hang_t::max_diff(slope) : bridge_height;
 		if(end.z + 2 < start.z + add_height) {
 			max_height = end.z + 2 - start.z;
 		}

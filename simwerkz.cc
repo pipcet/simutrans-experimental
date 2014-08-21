@@ -2366,7 +2366,11 @@ const char *wkz_brueckenbau_t::do_work( spieler_t *sp, const koord3d &start, con
 	}
 	else {
 		const koord zv(ribi_typ(end-start));
-		brueckenbauer_t::baue_bruecke( sp, start, end, zv, besch, wegbauer_t::weg_search(besch->get_waytype(), besch->get_topspeed(), welt->get_timeline_year_month(), weg_t::type_flat));
+		sint8 bridge_height;
+		const char *error;
+		koord3d end2 = brueckenbauer_t::finde_ende(sp, start, zv, besch, error, bridge_height, false, koord_distance(start, end));
+		assert(end2 == end);
+		brueckenbauer_t::baue_bruecke( sp, start, end, zv, bridge_height, besch, wegbauer_t::weg_search(besch->get_waytype(), besch->get_topspeed(), welt->get_timeline_year_month(), weg_t::type_flat));
 		return NULL; // all checks are performed before building.
 	}
 }
@@ -2385,7 +2389,8 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	const koord zv(ribi_mark);
 	const bruecke_besch_t *besch = brueckenbauer_t::get_besch(default_param);
 	const char *error;
-	koord3d end2 = brueckenbauer_t::finde_ende(sp, start, zv, besch, error, false, koord_distance(start, end));
+	sint8 bridge_height;
+	koord3d end2 = brueckenbauer_t::finde_ende(sp, start, zv, besch, error, bridge_height, false, koord_distance(start, end));
 
 	if (end != end2) {
 		fprintf(stderr, "uh, what?\n");
@@ -2400,7 +2405,7 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	// single height -> height is 1
 	// double height -> height is 2
 	const hang_t::typ slope = gr->get_grund_hang();
-	uint8 max_height = slope ?  hang_t::max_diff(slope) : (besch->has_double_ramp() ? 2 : 1);
+	uint8 max_height = slope ?  hang_t::max_diff(slope) : bridge_height;
 	if(end.z + 2 < start.z + max_height) {
 		max_height = end.z + 2 - start.z;
 	}
@@ -2585,7 +2590,8 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 
 		// check whether we can build a bridge here
 		const char *error = NULL;
- 		koord3d end = brueckenbauer_t::finde_ende(sp, start, koord(test), besch, error, false, koord_distance(start, pos));
+		sint8 bridge_height;
+ 		koord3d end = brueckenbauer_t::finde_ende(sp, start, koord(test), besch, error, bridge_height, false, koord_distance(start, pos));
 		if (end!=pos) {
 			return 0;
 		}
