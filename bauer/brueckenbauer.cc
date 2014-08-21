@@ -279,7 +279,7 @@ bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bru
 	return false;
 }
 
-#define set_bridge_height() do { if (height_okay(max_height)) { bridge_height = 2; } else if (height_okay(max_height-1)) { bridge_height = 1; } else { assert(false); } } while(0)
+#define set_bridge_height() do { if (height_okay(start_height+2)) { bridge_height = 2; } else if (height_okay(start_height+1)) { bridge_height = 1; } else if (height_okay(start_height)) { bridge_height = 0; } else { assert(false); } } while(0)
 #define height_okay(h) (((h) < min_bridge_height || (h) > max_height) ? false : height_okay_array[h-min_bridge_height])
 
 koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length )
@@ -447,8 +447,8 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 				// not matching => then we have to stop here!
 				break;
 			} else if (end_slope == hang_t::flach) {
-				if (height_okay(hang_height+1) ||
-				    (hang_height < max_height-1 && height_okay(hang_height+2))) {
+				if ((hang_height+1 >= start_height && height_okay(hang_height+1)) ||
+				    (hang_height < max_height-1 && hang_height+2 >= start_height && height_okay(hang_height+2))) {
 					/* now we have a flat tile below */
 					error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
 
