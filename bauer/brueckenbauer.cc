@@ -662,9 +662,6 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 	if(  start_gr->ist_karten_boden()  ) {
 		// needs a ramp to start on ground
 		add_height = slope ?  hang_t::max_diff(slope) : bridge_height;
-		if(end.z + 2 < start.z + add_height) {
-			add_height = end.z + 2 - start.z;
-		}
 		baue_auffahrt( sp, start, ribi, slope?0:hang_typ(zv)*add_height, besch );
 	}
 	if(  besch->get_waytype() != powerline_wt  ) {
