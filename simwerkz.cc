@@ -2515,51 +2515,63 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 	}
 
 	if(  is_first_click()  ) {
-		// first click
-		ribi_t::ribi rw = ribi_t::keine;
-		if (wt==powerline_wt) {
-			if (gr->hat_wege()) {
-				return 0;
-			}
-			if (gr->find<leitung_t>()) {
-				rw |= gr->find<leitung_t>()->get_ribi();
-			}
-		}
-		else {
-			if (gr->find<leitung_t>()) {
-				return 0;
-			}
-			if(wt!=road_wt) {
-			// only road bridges can have other ways on it (ie trams)
-				if(gr->has_two_ways()  ||  (gr->hat_wege() && gr->get_weg_nr(0)->get_waytype()!=wt) ) {
+		if(  gr->ist_karten_boden()  ) {
+			// first click
+			ribi_t::ribi rw = ribi_t::keine;
+			if (wt==powerline_wt) {
+				if (gr->hat_wege()) {
 					return 0;
 				}
-				if(gr->hat_wege()){
-					rw |= gr->get_weg_nr(0)->get_ribi_unmasked();
+				if (gr->find<leitung_t>()) {
+					rw |= gr->find<leitung_t>()->get_ribi();
 				}
 			}
 			else {
-				// If road and tram, we have to check both ribis.
-				for(int i=0;i<2;i++) {
-					const weg_t *w = gr->get_weg_nr(i);
-					if (w) {
-						if (w->get_waytype()!=road_wt  &&  (w->get_waytype()!=track_wt  ||  w->get_besch()->get_styp()!=tram_wt)) {
-							return 0;
-						}
-						rw |= w->get_ribi_unmasked();
+				if (gr->find<leitung_t>()) {
+					return 0;
+				}
+				if(wt!=road_wt) {
+					// only road bridges can have other ways on it (ie trams)
+					if(gr->has_two_ways()  ||  (gr->hat_wege() && gr->get_weg_nr(0)->get_waytype()!=wt) ) {
+						return 0;
 					}
-					else break;
+					if(gr->hat_wege()){
+						rw |= gr->get_weg_nr(0)->get_ribi_unmasked();
+					}
+				}
+				else {
+					// If road and tram, we have to check both ribis.
+					for(int i=0;i<2;i++) {
+						const weg_t *w = gr->get_weg_nr(i);
+						if (w) {
+							if (w->get_waytype()!=road_wt  &&  (w->get_waytype()!=track_wt  ||  w->get_besch()->get_styp()!=tram_wt)) {
+								return 0;
+							}
+							rw |= w->get_ribi_unmasked();
+						}
+						else break;
+					}
 				}
 			}
+			// ribi from slope
+			rw |= ribi_typ(gr->get_grund_hang());
+			if(  rw!=ribi_t::keine && !ribi_t::ist_einfach(rw)  ) {
+				return 0;
+			}
+			// determine possible directions
+			ribi = ribi_t::rueckwaerts(rw);
+			return (ribi!=ribi_t::keine ? 2 : 0) | (ribi_t::ist_einfach(ribi) ? 1 : 0);
+		} else {
+			if(  gr->get_weg_hang()  ) {
+				return 0;
+			}
+
+			if(  gr->get_typ() != grund_t::monorailboden  ) {
+				return 0;
+			}
+
+			return 2;
 		}
-		// ribi from slope
-		rw |= ribi_typ(gr->get_grund_hang());
-		if(  rw!=ribi_t::keine && !ribi_t::ist_einfach(rw)  ) {
-			return 0;
-		}
-		// determine possible directions
-		ribi = ribi_t::rueckwaerts(rw);
-		return (ribi!=ribi_t::keine ? 2 : 0) | (ribi_t::ist_einfach(ribi) ? 1 : 0);
 	}
 	else {
 		// second click
