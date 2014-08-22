@@ -661,9 +661,11 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 		// needs a ramp to start on ground
 		add_height = slope ?  hang_t::max_diff(slope) : bridge_height;
 		baue_auffahrt( sp, start, ribi, slope?0:hang_typ(zv)*add_height, besch );
-	}
-	if(  besch->get_waytype() != powerline_wt  ) {
-		ribi = welt->lookup(start)->get_weg_ribi_unmasked(besch->get_waytype());
+		if(  besch->get_waytype() != powerline_wt  ) {
+			ribi = welt->lookup(start)->get_weg_ribi_unmasked(besch->get_waytype());
+		}
+	} else {
+		ribi = ribi_t::rueckwaerts( ribi_typ(zv) );
 	}
 
 	koord3d pos = start+koord3d( zv.x, zv.y, add_height );
@@ -747,6 +749,8 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 		// we need to check start_gr again, because a ramp deletes the old ground
 		if(  (start_gr = welt->lookup( start ))  ) {
 			if(  !start_gr->ist_karten_boden()  ) {
+				ribi = ribi_t::rueckwaerts( ribi_typ(zv) );
+
 				// elevated way, just add ribi
 				start_gr->weg_erweitern( besch->get_waytype(), ribi_t::rueckwaerts( ribi ) );
 				start_gr->calc_bild();
