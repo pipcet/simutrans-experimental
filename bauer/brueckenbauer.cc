@@ -403,17 +403,33 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		// now check for end of bridge conditions
 		if(length >= min_length && hang_t::ist_wegbar(end_slope) && gr->get_typ()==grund_t::boden) {
 			if(end_slope == hang_t::flach && hang_height == max_height) {
+				/* bridge ends at a vertical wall, no ramp required */
+				if (!height_okay(max_height)) {
+					error_msg = "A bridge must start on a way!";
+					return koord3d::invalid;
+				}
+
 				/* now we have a flat tile below */
 				error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
-
-				if(  hang_height < max_height  &&  (  gr->has_two_ways()  ||  (  gr->get_weg_nr(0)  &&  (gr->get_weg_nr(0)->get_waytype() != besch->get_waytype()  ||  gr->get_weg_ribi_unmasked(besch->get_waytype())!=ribi_typ(zv)  )  )  )  ) {
-					// no crossing or curve here (since it will a slope ramp)
-					error_msg = "A bridge must start on a way!";
-				}
 
 				if(  !error_msg  ||  (!*error_msg) ) {
 					// success
 					set_bridge_height();
+					return gr->get_pos();
+				} else if (*error_msg) {
+					// this is an real error
+					return koord3d::invalid;
+				}
+			} else if(  end_slope == hang_t::flach && hang_height == max_height - 1 &&
+				    (ai_bridge || min_length) && height_okay(max_height - 1)  ) {
+				/* bridge ends at a low vertical wall, no ramp required */
+
+				/* now we have a flat tile below */
+				error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
+
+				if(  !error_msg  ||  (!*error_msg) ) {
+					// success
+					bridge_height = 1;
 					return gr->get_pos();
 				} else if (*error_msg) {
 					// this is an real error
@@ -480,28 +496,35 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 			// slope, which ends too low => we can continue
 		}
 
+		// sorry, this is in the way
+		if(  hang_height == max_height  ) {
+			break;
+		}
+
 		// something in the way ...
 		if(  hang_height > max_height  ) {
 			error_msg = "Cannot connect to the\ncenter of a double slope!";
 			return koord3d::invalid;
 		}
 
-		// sorry, this is in the way
-		if(  hang_height == max_height  ) {
-			break;
-		}
-
-		// check that we do not cross a too low way
-		if(  welt->get_settings().get_way_height_clearance() == 2  &&  gr->get_hoehe() == max_height-1  ) {
-			if(  weg_t *w = gr->get_weg_nr(0)  ) {
-				// now check if this is not a fence or a river (max_speed == 0)
-				if(  w->get_max_speed() > 0  ) {
-					error_msg = "Not enough clearance.";
-					return koord3d::invalid;
-				}
+		for(sint8 z = min_bridge_height; z <= hang_height; z++) {
+			if(height_okay(z)) {
+				height_okay_array[z-min_bridge_height] = false;
 			}
 		}
 
+		// check that we do not cross a too low way
+		for(sint8 z = gr->get_hoehe(); z < gr->get_hoehe() + welt->get_settings().get_way_height_clearance(); z++) {
+			if(height_okay(z)) {
+				if(  weg_t *w = gr->get_weg_nr(0)  ) {
+					// now check if this is not a fence or a river (max_speed == 0)
+					if(  w->get_max_speed() > 0  ) {
+						height_okay_array[z-min_bridge_height] = false;
+						error_msg = "Not enough clearance.";
+					}
+				}
+			}
+		}
 	} while(  !ai_bridge  ||  length <= welt->get_settings().way_max_bridge_len  ); // not too long in case of AI
 
 	error_msg = "A bridge must start on a way!";
