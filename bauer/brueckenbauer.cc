@@ -412,6 +412,7 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		const sint16 hang_height = gr->get_hoehe()+hang_t::max_diff(end_slope);
 
 		if(hang_height > max_height) {
+			error_msg = "Cannot connect to the\ncenter of a double slope!";
 			return koord3d::invalid;
 		}
 		if(hang_height < min_height) {
@@ -490,12 +491,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		// sorry, this is in the way
 		if(  hang_height == max_height  ) {
 			break;
-		}
-
-		// something in the way ...
-		if(  hang_height > max_height  ) {
-			error_msg = "Cannot connect to the\ncenter of a double slope!";
-			return koord3d::invalid;
 		}
 
 		for(sint8 z = min_bridge_height; z <= hang_height; z++) {
