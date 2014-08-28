@@ -3151,10 +3151,6 @@ void stadt_t::check_bau_spezial(bool new_town)
 						const grund_t *gr = welt->lookup_kartenboden(k);
 						if (i.value) {
 							if(gr->get_hoehe()==h  &&  gr->get_grund_hang()==0) {
-								gebaeude_t *gb = gr->find<gebaeude_t>();
-								if (gb) {
-									hausbauer_t::remove(NULL, gb);
-								}
 								if (gr->hat_weg(road_wt)) {
 									continue;
 								}
@@ -4379,9 +4375,11 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 	if (!hang_t::ist_wegbar(slope)) {
 		if (welt->can_ebne_planquadrat(NULL, k, bd->get_hoehe()+1, true)) {
 			welt->ebne_planquadrat(NULL, k, bd->get_hoehe()+1, true);
+			bd = welt->lookup_kartenboden(k);
 		}
 		else if(  bd->get_hoehe() > welt->get_water_hgt(k)  &&  welt->can_ebne_planquadrat(NULL, k, bd->get_hoehe() )  ) {
 			welt->ebne_planquadrat(NULL, k, bd->get_hoehe());
+			bd = welt->lookup_kartenboden(k);
 		}
 		else {
 			return false;
@@ -4483,9 +4481,19 @@ bool stadt_t::baue_strasse(const koord k, spieler_t* sp, bool forced)
 	}
 
 	if (connection_roads != ribi_t::keine || forced) {
-		while (bd->would_create_excessive_roads()) {
-			if (!bd->remove_excessive_roads()) {
-				return false;
+		grund_t::road_network_plan_t road_tiles;
+		road_tiles.set(k, true);
+		bool ok = grund_t::fixup_road_network_plan(road_tiles);
+
+		if (!ok) {
+			return false;
+		}
+
+		FOR(grund_t::road_network_plan_t, i, road_tiles) {
+			koord k = i.key;
+			grund_t *gr = welt->lookup_kartenboden(k);
+			if (!i.value) {
+				gr->weg_entfernen(road_wt, true);
 			}
 		}
 	}

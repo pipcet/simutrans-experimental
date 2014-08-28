@@ -2109,12 +2109,15 @@ bool grund_t::fixup_road_network_plan(road_network_plan_t &road_tiles)
 	FOR(road_network_plan_t, i, road_tiles) {
 		if (i.value == true) {
 			grund_t *gr = welt->lookup_kartenboden(i.key);
+			int count = 0;
 
-			while (gr->would_create_excessive_roads(road_tiles)) {
+			while (gr->would_create_excessive_roads(road_tiles) && count++ < 100) {
 				if (!gr->remove_excessive_roads(road_tiles)) {
 					return false;
 				}
 			}
+
+			assert(count < 100);
 		}
 	}
 
