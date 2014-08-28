@@ -2669,6 +2669,7 @@ void stadt_t::step_grow_city(bool new_town)
 	while ( --growth_steps >= 0 ) {
 		bev ++; // Hajo: bevoelkerung wachsen lassen ("grow population" - Google)
 
+#if 0
 		if (!failure) {
 			int i;
 
@@ -2682,6 +2683,7 @@ void stadt_t::step_grow_city(bool new_town)
 		check_bau_spezial(new_town);
 		check_bau_rathaus(new_town);
 		check_bau_factory(new_town); // add industry? (not during creation)
+#endif
 		INT_CHECK("simcity 2241");
 	}
 }
