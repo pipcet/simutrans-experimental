@@ -213,7 +213,7 @@ uint16 stadt_t::get_electricity_consumption(sint32 monthyear) const
  * in this fixed interval, construction will happen
  * 21s = 21000 per house
  */
-const uint32 stadt_t::city_growth_step = 21000;
+const uint32 stadt_t::city_growth_step = 210;
 
 /**
  * this is the default factor applied to increase the likelihood
@@ -930,12 +930,7 @@ class denkmal_platz_sucher_t : public platzsucher_t {
 			}
 
 			if (gr->get_typ() == grund_t::fundament) {
-				sint8 new_hgt;
-				const uint8 new_slope = welt->recalc_natural_slope(gr->get_pos().get_2d(),new_hgt);
-
-				if (new_slope != hang_t::flach) {
-					return false;
-				}
+				return false;
 			}
 
 			if (gr->hat_wege() && !gr->hat_weg(road_wt)) {
@@ -947,7 +942,16 @@ class denkmal_platz_sucher_t : public platzsucher_t {
 			}
 
 			if (ist_randfeld(d)) {
+				if (!gr->ist_karten_boden()) {
+					return false;
+				}
 			} else {
+				if (!gr->ist_karten_boden()) {
+					return false;
+				}
+				if (!gr->ist_natur()) {
+					return false;
+				}
 				/* XXX necessary? */
 				if (gr->hat_weg(tram_wt)) {
 					return false;
@@ -2669,7 +2673,7 @@ void stadt_t::step_grow_city(bool new_town)
 	while ( --growth_steps >= 0 ) {
 		bev ++; // Hajo: bevoelkerung wachsen lassen ("grow population" - Google)
 
-#if 0
+#if 1
 		if (!failure) {
 			int i;
 
