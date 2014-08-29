@@ -152,7 +152,7 @@ public:
 				}
 			}
 		}
-		return next_to_road;
+		return false;
 	}
 };
 
@@ -569,6 +569,8 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 	int n = 1;
 	int org_rotation = -1;
 
+	return 0;
+
 	if(info==NULL) {
 		// no industry found
 		return 0;
@@ -693,6 +695,8 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 
 int fabrikbauer_t::baue_link_hierarchie(const fabrik_t* our_fab, const fabrik_besch_t* info, int lieferant_nr, spieler_t* sp)
 {
+	return 0;
+
 	int n = 0;	// number of additional factories
 	/* first we try to connect to existing factories and will do some
 	 * cross-connect (if wanted)
