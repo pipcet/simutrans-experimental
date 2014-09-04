@@ -213,7 +213,7 @@ uint16 stadt_t::get_electricity_consumption(sint32 monthyear) const
  * in this fixed interval, construction will happen
  * 21s = 21000 per house
  */
-const uint32 stadt_t::city_growth_step = 210;
+const uint32 stadt_t::city_growth_step = 21000;
 
 /**
  * this is the default factor applied to increase the likelihood
@@ -2668,9 +2668,11 @@ void stadt_t::step_grow_city(bool new_town)
 	int growth_steps = (wachstum >> 4);
 	wachstum &= 0x0F;
 
+	DBG_MESSAGE("stadt_t::step_grow_city","growing %s/%d",get_name(),growth_steps);
 	// Hajo: let city grow in steps of 1
 	// @author prissi: No growth without development
 	while ( --growth_steps >= 0 ) {
+		DBG_MESSAGE("stadt_t::step_grow_city","growing %s/%d",get_name(),growth_steps);
 		bev ++; // Hajo: bevoelkerung wachsen lassen ("grow population" - Google)
 
 #if 1
@@ -2690,6 +2692,7 @@ void stadt_t::step_grow_city(bool new_town)
 #endif
 		INT_CHECK("simcity 2241");
 	}
+	DBG_MESSAGE("stadt_t::step_grow_city","grew %s/%d",get_name(),wachstum);
 }
 
 

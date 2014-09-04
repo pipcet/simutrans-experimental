@@ -152,7 +152,7 @@ public:
 				}
 			}
 		}
-		return false;
+		return next_to_road;
 	}
 };
 
@@ -569,8 +569,7 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 	int n = 1;
 	int org_rotation = -1;
 
-	return 0;
-
+DBG_MESSAGE("fabrikbauer_t::baue_hierarchie","building %s at %s",info ? info->get_name() : NULL,pos->get_str());
 	if(info==NULL) {
 		// no industry found
 		return 0;
@@ -592,6 +591,7 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 		assert( can_save );
 	}
 
+DBG_MESSAGE("fabrikbauer_t::baue_hierarchie","building %s at %s",info->get_name(),pos->get_str());
 	// Industries in town needs different place search
 	if (info->get_platzierung() == fabrik_besch_t::Stadt) {
 
@@ -609,7 +609,9 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 		 */
 		bool is_rotate=info->get_haus()->get_all_layouts()>1  &&  size.x!=size.y  &&  info->get_haus()->can_rotate();
 		// first try with standard orientation
+DBG_MESSAGE("fabrikbauer_t::baue_hierarchie","[3] building %s at %s (%d x %d, %d)",info->get_name(),pos->get_str(), (int)size.x, (int)size.y, (int)info->get_haus()->get_allowed_climate_bits());
 		koord k = factory_bauplatz_mit_strasse_sucher_t(welt).suche_platz(city->get_pos(), size.x, size.y, info->get_haus()->get_allowed_climate_bits());
+DBG_MESSAGE("fabrikbauer_t::baue_hierarchie","[4] building %s at %s",info->get_name(),pos->get_str());
 
 		// second try: rotated
 		koord k1 = koord::invalid;
@@ -695,8 +697,6 @@ int fabrikbauer_t::baue_hierarchie(koord3d* parent, const fabrik_besch_t* info, 
 
 int fabrikbauer_t::baue_link_hierarchie(const fabrik_t* our_fab, const fabrik_besch_t* info, int lieferant_nr, spieler_t* sp)
 {
-	return 0;
-
 	int n = 0;	// number of additional factories
 	/* first we try to connect to existing factories and will do some
 	 * cross-connect (if wanted)
