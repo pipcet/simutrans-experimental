@@ -4114,8 +4114,8 @@ void convoi_t::rdwr(loadsave_t *file)
 					file->rdwr_short(total);
 					file->rdwr_short(ave_count);
 					average_tpl<uint16> ave;
-					ave.total = total;
-					ave.count = count;
+					ave.total = total/count;
+					fprintf(stderr, "journey_times %d %d\n", ave.total, ave.count);
 					journey_times_between_schedule_points.put(departure_point, ave);
 				}
 			}
@@ -4177,7 +4177,7 @@ void convoi_t::rdwr(loadsave_t *file)
 				file->rdwr_short(total);
 
 				average_tpl<uint16> average;
-				average.count = count;
+				average.count = count/total;
 				average.total = total;
 
 				average_journey_times.put(idp, average);
@@ -4541,15 +4541,21 @@ void convoi_t::laden() //"load" (Babelfish)
 			latest_journey_time = 1;
 		}
 
+		fprintf(stderr, "convoy %d journey time %lld %lld\n", 
+			self.get_id(), (sint64)latest_journey_time, journey_times_between_schedule_points.get(this_departure).get_average());
 		if(journey_times_between_schedule_points.is_contained(this_departure))
 		{
 			// The add_check_overflow_16 function should have the effect of slowly making older timings less and less significant
 			// to this figure.
-			journey_times_between_schedule_points.access(this_departure)->add_check_overflow_16((uint16)latest_journey_time);
+ 			journey_times_between_schedule_points.access(this_departure)->add_check_overflow_16((uint16)latest_journey_time);
 		}
 		else
 		{
 			average_tpl<uint16> ave;
+			ave.add((uint16)latest_journey_time);
+			ave.add((uint16)latest_journey_time);
+			ave.add((uint16)latest_journey_time);
+			ave.add((uint16)latest_journey_time);
 			ave.add((uint16)latest_journey_time);
 			journey_times_between_schedule_points.put(this_departure, ave);
 		}
@@ -6716,6 +6722,7 @@ void convoi_t::clear_replace()
 			}
 
 			journey_time_ticks = welt->seconds_to_ticks(journey_time_tenths_minutes * 6);
+			eta = etd;
 			eta += journey_time_ticks;
 			etd += journey_time_ticks;
 			halt = haltestelle_t::get_halt(fpl->eintrag[schedule_entry].pos, besitzer_p);
@@ -6756,6 +6763,9 @@ void convoi_t::clear_replace()
 			fpl->increment_index(&schedule_entry, &rev);
 			departure_point.entry = schedule_entry;
 			departure_point.reversed = rev;
+
+			fprintf(stderr, "%d: convoy %d halt %d ETA %lld ETD %lld journey_time %lld\n",
+				(int)i, (int)self.get_id(), (int)halt.get_id(), eta, etd, journey_time_ticks);
 		}
 	}
 	else

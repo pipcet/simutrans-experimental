@@ -194,33 +194,18 @@ public:
 
 	inline void add(T value)
 	{
+		total /= 2;
 		total += value;
-		count ++;
 	}
 
 	inline void add_check_overflow_16(T value)
 	{
-		sint64 new_total = (sint64)total + (sint64)value;
-		count++;
-		while(new_total > 65535ll)
-		{
-			new_total /= 2;
-			count /= 2;
-		}
-		total = (uint16)new_total;
+		add(value);
 	}
 
 	inline T get_average() const
 	{
-		if(count == 0)
-		{
-			return 0;
-		}
-		if(count == 1)
-		{
-			return total;
-		}
-		return total / count;
+		return total - total/2;
 	}
 
 	inline void reset()
@@ -237,8 +222,6 @@ public:
 	*/
 	inline T reduce()
 	{
-		total = get_average();
-		count = 1;
 		return total; 
 	}
 };
