@@ -1466,6 +1466,7 @@ public:
 
 	journey_times_map& get_average_journey_times();
 	inline const journey_times_map& get_average_journey_times_this_convoy_only() const { return average_journey_times; }
+	void register_journey_time(departure_point_t departure_point, sint64 journey_time, bool other_convoys);
 
 	/**
 	 * Clears the departure data.
