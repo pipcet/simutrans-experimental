@@ -2116,9 +2116,14 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 					sint64 fast_here_arrival_time = get_estimated_convoy_arrival_times().get(fast_convoy.get_id());
 					sint64 fast_here_departure_time = get_estimated_convoy_departure_times().get(fast_convoy.get_id());
 					bool fast_is_here = loading_here.is_contained(fast_convoy);
-					
-					fprintf(stderr, "arrival times: fast %lld (%d) this %lld (%d) here %lld/%lld time %lld cld %lld improvement %f wait %lld\n",
-						fast_arrival_time, fast_convoy.get_id(), this_arrival_time, cnv->self.get_id(), this_here_arrival_time, this_here_departure_time, welt->get_zeit_ms(), (sint64)cnv->get_current_loading_time(),
+
+					sint64 t = welt->get_zeit_ms();
+					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
+						fast_arrival_time, fast_arrival_time - t, fast_convoy.get_id(),
+						this_arrival_time, this_arrival_time - t, cnv->self.get_id(),
+						this_here_arrival_time, this_here_departure_time,
+						this_here_arrival_time - t, this_here_departure_time -t,
+						t, (sint64)cnv->get_current_loading_time(),
 						(this_arrival_time - welt->get_zeit_ms()) / (double)(fast_arrival_time - welt->get_zeit_ms()), (fast_here_arrival_time - welt->get_zeit_ms()));
 					if (this_here_arrival_time > welt->get_zeit_ms()) {
 						/* We arrived at this stop earlier than we thought we would (our ETA is in the future, but we're already loading); adjust this_arrival_time for the difference. */
