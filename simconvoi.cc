@@ -4582,7 +4582,7 @@ void convoi_t::laden() //"load" (Babelfish)
 			latest_journey_time = 1;
 		}
 
-		register_journey_time(this_departure, latest_journey_time, true);
+		register_journey_time(this_departure, latest_journey_time, false);
 		
 		sint32 average_speed = (journey_distance_meters * 3) / ((sint32)latest_journey_time * 5);
 
