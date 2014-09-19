@@ -2118,7 +2118,7 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 					bool fast_is_here = loading_here.is_contained(fast_convoy);
 
 					sint64 t = welt->get_zeit_ms();
-					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
+					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld/%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
 						fast_arrival_time, fast_arrival_time - t, fast_convoy.get_id(),
 						this_arrival_time, this_arrival_time - t, cnv->self.get_id(),
 						this_here_arrival_time, this_here_departure_time,
@@ -2142,13 +2142,19 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 						fprintf(stderr, "fast convoy will arrive in %lld ticks, adjusted ETA to %lld\n", wait, fast_arrival_time);
 					}
 
-					fprintf(stderr, "arrival times: fast %lld (%d) this %lld (%d) here %lld/%lld time %lld cld %lld improvement %f wait %lld\n",
-						fast_arrival_time, fast_convoy.get_id(), this_arrival_time, cnv->self.get_id(), this_here_arrival_time, this_here_departure_time, welt->get_zeit_ms(), (sint64)cnv->get_current_loading_time(),
+
+					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld/%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
+						fast_arrival_time, fast_arrival_time - t, fast_convoy.get_id(),
+						this_arrival_time, this_arrival_time - t, cnv->self.get_id(),
+						this_here_arrival_time, this_here_departure_time,
+						this_here_arrival_time - t, this_here_departure_time -t,
+						t, (sint64)cnv->get_current_loading_time(),
 						(this_arrival_time - welt->get_zeit_ms()) / (double)(fast_arrival_time - welt->get_zeit_ms()), (fast_here_arrival_time - welt->get_zeit_ms()));
 
 					if(fast_arrival_time < this_arrival_time &&
 					   this_arrival_time - welt->get_zeit_ms() > (fast_arrival_time - welt->get_zeit_ms()) * 125/100)
 					{
+						fprintf(stderr, "SKIPPING\n");
 						// Do not board this convoy if another will reach the next transfer more quickly.
 						fpl->increment_index(&index, &reverse);
 						skipped = true;
