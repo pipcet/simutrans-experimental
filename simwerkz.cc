@@ -2577,19 +2577,6 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 	else {
 		// second click
 
-		// get initial height of bridge from start tile
-		// flat -> height is 1 if conversion factor 1, 2 if conversion factor 2
-		// single height -> height is 1
-		// double height -> height is 2
-		const hang_t::typ slope = gr->get_grund_hang();
-		const uint8 max_height = slope ? ((slope & 7) ? 1 : 2) : welt->get_settings().get_way_height_clearance();
-		const hang_t::typ start_slope = welt->lookup(start)->get_grund_hang();
-		const uint8 start_max_height = start_slope ? ((start_slope & 7) ? 1 : 2) : welt->get_settings().get_way_height_clearance();
-		const uint8 height_difference = abs( start.z + start_max_height - pos.z - max_height );
-		if(  height_difference>1  &&  besch->get_hintergrund(bruecke_besch_t::N_Start2, 0) == IMG_LEER  ) {
-			return 0;
-		}
-
 		// dragging in the right direction?
 		ribi_t::ribi test = ribi_typ(pos - start);
 		if (!ribi_t::ist_einfach(test)  ||  ((test & (~ribi))!=0) ) {
