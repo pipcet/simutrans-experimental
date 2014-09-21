@@ -2459,7 +2459,7 @@ void wkz_brueckenbau_t::mark_tiles(  spieler_t *sp, const koord3d &start, const 
 	// flat -> height is 1 if conversion factor 1, 2 if conversion factor 2
 	// single height -> height is 1
 	// double height -> height is 2
-	const hang_t::typ end_slope = gr->get_grund_hang();
+	const hang_t::typ end_slope = gr->get_weg_hang();
 	const uint8 end_max_height = end_slope ? ((end_slope & 7) ? 1 : 2) : (pos.z-end.z);
 
 	if(  gr->ist_karten_boden()  &&  end.z + end_max_height == start.z + max_height  ) {
@@ -2566,7 +2566,8 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 				return 0;
 			}
 
-			if(  gr->get_typ() != grund_t::monorailboden  ) {
+			if(  gr->get_typ() != grund_t::monorailboden  &&
+			     gr->get_typ() != grund_t::tunnelboden  ) {
 				return 0;
 			}
 
