@@ -680,7 +680,13 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 			ribi = welt->lookup(start)->get_weg_ribi_unmasked(besch->get_waytype());
 		}
 	} else {
-		ribi = ribi_t::rueckwaerts( ribi_typ(zv) );
+		if(  !start_gr->weg_erweitern( besch->get_waytype(), ribi )  ) {
+			// builds new way
+			weg_t * const weg = weg_t::alloc( besch->get_waytype() );
+			weg->set_besch( weg_besch );
+			spieler_t::book_construction_costs( sp, -start_gr->neuen_weg_bauen( weg, ribi, sp ) -weg->get_besch()->get_preis(), end.get_2d(), weg->get_waytype());
+		}
+		start_gr->calc_bild();
 	}
 
 	koord3d pos = start+koord3d( zv.x, zv.y, add_height );

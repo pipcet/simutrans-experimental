@@ -2571,6 +2571,12 @@ uint8 wkz_brueckenbau_t::is_valid_pos(  spieler_t *sp, const koord3d &pos, const
 				return 0;
 			}
 
+			if(!gr->get_weg_nr(0)) {
+				return 0;
+			}
+
+			ribi = ~gr->get_weg_nr(0)->get_ribi_unmasked();
+
 			return 2;
 		}
 	}
