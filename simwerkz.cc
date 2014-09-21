@@ -536,8 +536,8 @@ DBG_MESSAGE("wkz_remover()", "bound=%i",halt.is_bound());
 
 DBG_MESSAGE("wkz_remover()", "check tunnel/bridge");
 
-	// beginning/end of bridge?
-	if(  brueckenbauer_t::is_start_of_bridge(gr)  ) {
+	// bridge?
+	if(gr->ist_bruecke()) {
 DBG_MESSAGE("wkz_remover()",  "removing bridge from %d,%d,%d",gr->get_pos().x, gr->get_pos().y, gr->get_pos().z);
 		bruecke_t* br = gr->find<bruecke_t>();
 		msg = brueckenbauer_t::remove(sp, gr->get_pos(), br->get_besch()->get_waytype());

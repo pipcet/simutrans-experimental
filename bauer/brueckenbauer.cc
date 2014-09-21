@@ -826,7 +826,7 @@ void brueckenbauer_t::baue_auffahrt(spieler_t* sp, koord3d end, ribi_t::ribi rib
 }
 
 
-const char *brueckenbauer_t::remove(spieler_t *sp, koord3d pos, waytype_t wegtyp)
+const char *brueckenbauer_t::remove(spieler_t *sp, koord3d pos_start, waytype_t wegtyp)
 {
 	marker_t& marker = marker_t::instance(welt->get_size().x, welt->get_size().y);
 	slist_tpl<koord3d> end_list;
@@ -834,10 +834,10 @@ const char *brueckenbauer_t::remove(spieler_t *sp, koord3d pos, waytype_t wegtyp
 	slist_tpl<koord3d> tmp_list;
 	const char    *msg;
 
-	tmp_list.insert(pos);
-	marker.mark(welt->lookup(pos));
+	tmp_list.insert(pos_start);
+	marker.mark(welt->lookup(pos_start));
 	waytype_t delete_wegtyp = wegtyp==powerline_wt ? invalid_wt : wegtyp;
-
+	koord3d pos;
 	do {
 		pos = tmp_list.remove_first();
 
@@ -846,15 +846,61 @@ const char *brueckenbauer_t::remove(spieler_t *sp, koord3d pos, waytype_t wegtyp
 		grund_t *to;
 		koord zv = koord::invalid;
 
-		if(from->ist_karten_boden()) {
+		if(pos != pos_start && from->ist_karten_boden()) {
 			// gr is start/end - test only one direction
 			if(from->get_grund_hang() != hang_t::flach) {
 				zv = -koord(from->get_grund_hang());
 			}
-			else {
+			else if(from->get_weg_hang() != hang_t::flach) {
 				zv = koord(from->get_weg_hang());
 			}
 			end_list.insert(pos);
+		}
+		else if(pos == pos_start) {
+			if(from->ist_karten_boden()) {
+				// gr is start/end - test only one direction
+				if(from->get_grund_hang() != hang_t::flach) {
+					zv = -koord(from->get_grund_hang());
+				}
+				else if(from->get_weg_hang() != hang_t::flach) {
+					zv = koord(from->get_weg_hang());
+				}
+				end_list.insert(pos);
+			}
+			else {
+				ribi_t::ribi dir1, dir2;
+				bool dir1_okay, dir2_okay;
+				if(from->get_weg_nr(0)->get_ribi_unmasked() == ribi_t::nordsued) {
+					dir1 = ribi_t::nord;
+					dir2 = ribi_t::sued;
+				} else {
+					dir1 = ribi_t::ost;
+					dir2 = ribi_t::west;
+				}
+
+				grund_t *to;
+				if(from->get_neighbour(to, from->get_weg_nr(0)->get_waytype(), dir1)) {
+					if (!to->ist_bruecke()) {
+						dir1_okay = true;
+					}
+				} else {
+					dir1_okay = true;
+				}
+				if(from->get_neighbour(to, from->get_weg_nr(0)->get_waytype(), dir2)) {
+					if (!to->ist_bruecke()) {
+						dir2_okay = true;
+					}
+				} else {
+					dir2_okay = true;
+				}
+
+				if(!dir1_okay && !dir2_okay) {
+					return "Cannot delete a bridge from its centre";
+				}
+
+				zv = koord(dir1_okay ? dir2 : dir1);
+				part_list.insert(pos);
+			}
 		}
 		else if(from->ist_bruecke()) {
 			part_list.insert(pos);
@@ -1003,6 +1049,7 @@ const char *brueckenbauer_t::remove(spieler_t *sp, koord3d pos, waytype_t wegtyp
 			else {
 				bridge_ribi = ~ribi_typ(gr->get_weg_hang());
 			}
+			bridge_ribi &= ~(ribi_t::rueckwaerts(~bridge_ribi));
 			ribi &= bridge_ribi;
 
 			bruecke_t *br = gr->find<bruecke_t>();
