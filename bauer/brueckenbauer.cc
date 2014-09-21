@@ -307,7 +307,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 	sint8 min_bridge_height = start_height + (slope==0);
 	sint8 min_height = start_height - (1+besch->has_double_ramp()) + (slope==0);
 	sint8 max_height = start_height + (slope ? 0 : (1+besch->has_double_ramp()));
-	bool ramp_required = false;
 
 	// when a bridge starts on an elevated way, only downwards ramps are allowed
 	if(  !gr2->ist_karten_boden()  ) {
@@ -324,7 +323,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		max_height = start_height;
 		min_height = max_height - (1+besch->has_double_ramp());
 		min_bridge_height = start_height;
-		ramp_required = true;
 	}
 	bool height_okay_array[256];
 	for (int i = 0; i < max_height+1 - min_bridge_height; i++) {
@@ -392,10 +390,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 				if(is_blocked(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
 					height_okay_array[z-min_bridge_height] = false;
 				} else if(is_monorail_junction(koord3d(pos.get_2d(), z), sp, besch, error_msg)) {
-					if (ramp_required) {
-						error_msg = "A bridge must start on a way!";
-						return koord3d::invalid;
-					}
 					gr = welt->lookup(koord3d(pos.get_2d(), z));
 					bridge_height = z - start_height;
 					return gr->get_pos();
@@ -422,11 +416,6 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		if(length >= min_length && hang_t::ist_wegbar(end_slope) && gr->get_typ()==grund_t::boden) {
 			if(height_okay(hang_height) && end_slope == hang_t::flach &&
 			   (hang_height == max_height || ai_bridge || min_length)) {
-				if (ramp_required) {
-					error_msg = "A bridge must start on a way!";
-				} else {
-					/* now we have a flat tile below */
-					error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
 
 					if(  !error_msg  ||  (!*error_msg) ) {
 						// success
