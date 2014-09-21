@@ -4114,8 +4114,8 @@ void convoi_t::rdwr(loadsave_t *file)
 					file->rdwr_short(total);
 					file->rdwr_short(ave_count);
 					average_tpl<uint16> ave;
-					ave.total = total;
-					ave.count = count;
+					ave.total = total/count;
+					fprintf(stderr, "journey_times %d %d\n", ave.total, ave.count);
 					journey_times_between_schedule_points.put(departure_point, ave);
 				}
 			}
@@ -4177,7 +4177,7 @@ void convoi_t::rdwr(loadsave_t *file)
 				file->rdwr_short(total);
 
 				average_tpl<uint16> average;
-				average.count = count;
+				average.count = count/total;
 				average.total = total;
 
 				average_journey_times.put(idp, average);
@@ -4445,6 +4445,47 @@ bool convoi_t::pruefe_alle() //"examine all" (Babelfish)
 	return ok;
 }
 
+void convoi_t::register_journey_time(departure_point_t departure_point, sint64 journey_time, bool other_convoys)
+{
+	fprintf(stderr, "convoy %d journey time %lld %lld\n", 
+		self.get_id(), (sint64)journey_time, journey_times_between_schedule_points.get(departure_point).get_average());
+	if(journey_times_between_schedule_points.is_contained(departure_point))
+	{
+		// The add_check_overflow_16 function should have the effect of slowly making older timings less and less significant
+		// to this figure.
+		journey_times_between_schedule_points.access(departure_point)->add_check_overflow_16((uint16)journey_time);
+        }
+	else
+	{
+		average_tpl<uint16> ave;
+		ave.add((uint16)journey_time);
+		journey_times_between_schedule_points.put(departure_point, ave);
+	}
+
+	if (other_convoys) {
+		linehandle_t line = get_line();
+
+		if (line.is_bound()) {
+			uint32 convoys = line->count_convoys();
+
+			for (uint32 i=0; i<convoys; i++) {
+				convoihandle_t other_cnv = line->get_convoy(i);
+
+				if (other_cnv.get_id() == self.get_id()) {
+					continue;
+				}
+
+				if (!has_same_vehicles(other_cnv)) {
+					continue;
+				}
+
+				other_cnv->register_journey_time(departure_point, journey_time, false);
+			}
+			
+		}
+	}
+}
+
 
 /**
  * Kontrolliert Be- und Entladen
@@ -4541,19 +4582,8 @@ void convoi_t::laden() //"load" (Babelfish)
 			latest_journey_time = 1;
 		}
 
-		if(journey_times_between_schedule_points.is_contained(this_departure))
-		{
-			// The add_check_overflow_16 function should have the effect of slowly making older timings less and less significant
-			// to this figure.
-			journey_times_between_schedule_points.access(this_departure)->add_check_overflow_16((uint16)latest_journey_time);
-		}
-		else
-		{
-			average_tpl<uint16> ave;
-			ave.add((uint16)latest_journey_time);
-			journey_times_between_schedule_points.put(this_departure, ave);
-		}
-
+		register_journey_time(this_departure, latest_journey_time, false);
+		
 		sint32 average_speed = (journey_distance_meters * 3) / ((sint32)latest_journey_time * 5);
 
 		// For some odd reason, in some cases, laden() is called when the journey time is
@@ -6716,6 +6746,7 @@ void convoi_t::clear_replace()
 			}
 
 			journey_time_ticks = welt->seconds_to_ticks(journey_time_tenths_minutes * 6);
+			eta = etd;
 			eta += journey_time_ticks;
 			etd += journey_time_ticks;
 			halt = haltestelle_t::get_halt(fpl->eintrag[schedule_entry].pos, besitzer_p);
@@ -6756,6 +6787,9 @@ void convoi_t::clear_replace()
 			fpl->increment_index(&schedule_entry, &rev);
 			departure_point.entry = schedule_entry;
 			departure_point.reversed = rev;
+
+			fprintf(stderr, "%d: convoy %d halt %d ETA %lld ETD %lld journey_time %lld\n",
+				(int)i, (int)self.get_id(), (int)halt.get_id(), eta, etd, journey_time_ticks);
 		}
 	}
 	else
