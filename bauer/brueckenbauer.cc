@@ -290,7 +290,7 @@ bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bru
 #define set_bridge_height() do { if (height_okay(start_height+2)) { bridge_height = 2; } else if (height_okay(start_height+1)) { bridge_height = 1; } else if (height_okay(start_height)) { bridge_height = 0; } else { assert(false); } } while(0)
 #define height_okay(h) (((h) < min_bridge_height || (h) > max_height) ? false : height_okay_array[h-min_bridge_height])
 
-koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length )
+koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length, bool high_bridge )
 {
 	const grund_t *gr2 = welt->lookup( pos );
 	if(  !gr2  ) {
