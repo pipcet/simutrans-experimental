@@ -287,7 +287,6 @@ bool brueckenbauer_t::is_monorail_junction(koord3d pos, spieler_t *sp, const bru
 	return false;
 }
 
-#define set_bridge_height() do { if (height_okay(start_height+2)) { bridge_height = 2; } else if (height_okay(start_height+1)) { bridge_height = 1; } else if (height_okay(start_height)) { bridge_height = 0; } else { assert(false); } } while(0)
 #define height_okay(h) (((h) < min_bridge_height || (h) > max_height) ? false : height_okay_array[h-min_bridge_height])
 
 koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, const bruecke_besch_t *besch, const char *&error_msg, sint8 &bridge_height, bool ai_bridge, uint32 min_length, bool high_bridge )
@@ -304,8 +303,8 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 	// double height -> height is 2
 	const hang_t::typ slope = gr2->get_weg_hang();
 	const sint8 start_height = gr2->get_hoehe() + hang_t::max_diff(slope);
-	sint8 min_bridge_height = start_height + (slope==0);
-	sint8 min_height = start_height - (1+besch->has_double_ramp()) + (slope==0);
+	sint8 min_bridge_height = start_height; /* was  + (slope==0) */
+	sint8 min_height = start_height - (1+besch->has_double_ramp()); // + (slope==0);
 	sint8 max_height = start_height + (slope ? 0 : (1+besch->has_double_ramp()));
 
 	// when a bridge starts on an elevated way, only downwards ramps are allowed
@@ -415,14 +414,21 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 		// now check for end of bridge conditions
 		if(length >= min_length && hang_t::ist_wegbar(end_slope) &&
 		   (gr->get_typ()==grund_t::boden || gr->get_typ()==grund_t::tunnelboden)) {
+			bool finish = false;
 			if(height_okay(hang_height) && end_slope == hang_t::flach &&
 			   (hang_height == max_height || ai_bridge || min_length)) {
+				/* now we have a flat tile below */
+				error_msg = check_tile( gr, sp, besch->get_waytype(), ribi_typ(zv) );
 
-					if(  !error_msg  ||  (!*error_msg) ) {
-						// success
-						bridge_height = hang_height - start_height;
-						return gr->get_pos();
+				if(  !error_msg  ||  (!*error_msg) ) {
+					// success
+					for(sint8 z = hang_height + 3; z <= max_height; z++) {
+						height_okay_array[z-min_bridge_height] = false;
 					}
+					for(sint8 z = min_bridge_height; z < hang_height; z++) {
+						height_okay_array[z-min_bridge_height] = false;
+					}
+					finish = true;
 				}
 			} else if(  height_okay(hang_height) &&
 				    (hang_height == max_height || ai_bridge || min_length) ) {
@@ -458,32 +464,55 @@ koord3d brueckenbauer_t::finde_ende(spieler_t *sp, koord3d pos, const koord zv, 
 						for(sint8 z = hang_height + 3; z <= max_height; z++) {
 							height_okay_array[z-min_bridge_height] = false;
 						}
-						// success
-						set_bridge_height();
-						return gr->get_pos();
-					}
-
-					if(  *error_msg == 0 ) {
+						finish = true;
+					} else if(  *error_msg == 0 ) {
 						if(  (ai_bridge  ||  min_length)  ) {
 							for(sint8 z = hang_height + 3; z <= max_height; z++) {
 								height_okay_array[z-min_bridge_height] = false;
 							}
 							// in the way, or find shortest and empty => ok
-							set_bridge_height();
-							return gr->get_pos();
+							finish = true;
 						}
 					}
+
 				}
+			}
+
+			if (finish) {
+				if (high_bridge) {
+					if (height_okay(start_height+2)) {
+						bridge_height = 2;
+					} else if (height_okay(start_height+1)) {
+						bridge_height = 1;
+					} else if (height_okay(start_height+0)) {
+						bridge_height = 0;
+					} else {
+						assert(false);
+					}
+				} else {
+					if (height_okay(start_height)) {
+						bridge_height = 0;
+					} else if (height_okay(start_height+1)) {
+						bridge_height = 1;
+					} else if (height_okay(start_height+2)) {
+						bridge_height = 2;
+					} else {
+						assert(false);
+					}
+				}
+				return gr->get_pos();
 			}
 			// slope, which ends too low => we can continue
 		}
 
+		const hang_t::typ end_ground_slope = gr->get_grund_hang();
+		const sint16 hang_ground_height = gr->get_hoehe()+hang_t::max_diff(end_ground_slope);
 		// sorry, this is in the way
-		if(  hang_height == max_height  ) {
+		if(  hang_ground_height >= max_height  ) {
 			break;
 		}
 
-		for(sint8 z = min_bridge_height; z <= hang_height; z++) {
+		for(sint8 z = min_bridge_height; z <= hang_ground_height; z++) {
 			if(height_okay(z)) {
 				height_okay_array[z-min_bridge_height] = false;
 			}
@@ -643,7 +672,7 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 		end_slope_height += hang_t::max_diff(end_slope);
 	}
 
-	if(  start_gr->ist_karten_boden()  ) {
+	if (slope || bridge_height != 0) {
 		// needs a ramp to start on ground
 		add_height = slope ?  hang_t::max_diff(slope) : bridge_height;
 		baue_auffahrt( sp, start, ribi, slope?0:hang_typ(zv)*add_height, besch );
@@ -732,29 +761,19 @@ void brueckenbauer_t::baue_bruecke(spieler_t *sp, const koord3d start, const koo
 
 	// if start or end are single way, and next tile is not, try to connect
 	if(  besch->get_waytype() != powerline_wt  &&  sp  ) {
-		// we need to check start_gr again, because a ramp deletes the old ground
-		if(  (start_gr = welt->lookup( start ))  ) {
-			if(  !start_gr->ist_karten_boden()  ) {
-				ribi = ribi_t::rueckwaerts( ribi_typ(zv) );
-
-				// elevated way, just add ribi
-				start_gr->weg_erweitern( besch->get_waytype(), ribi_t::rueckwaerts( ribi ) );
-				start_gr->calc_bild();
-			}
-			else {
-				ribi_t::ribi start_ribi = start_gr->get_weg_ribi_unmasked( besch->get_waytype() );
-				if(  ribi_t::ist_einfach(start_ribi)  ) {
-					// only single tile under start => try to connect to next tile
-					koord3d next_to_start = koord3d( start.get_2d()-koord(start_ribi), start_gr->get_vmove( ribi_t::rueckwaerts(start_ribi) ) );
-					wegbauer_t bauigel(sp);
-					bauigel.set_keep_existing_ways(true);
-					bauigel.set_keep_city_roads(true);
-					bauigel.set_maximum(2);
-					bauigel.route_fuer( (wegbauer_t::bautyp_t)besch->get_waytype(), wegbauer_t::weg_search( besch->get_waytype(), besch->get_topspeed(), welt->get_timeline_year_month(), weg_t::type_flat ), NULL, NULL );
-					bauigel.calc_route( start, next_to_start );
-					if(  bauigel.get_count() > 1  ) {
-						bauigel.baue();
-					}
+		if(  grund_t *start_gr = welt->lookup(start)  ) {
+			ribi_t::ribi ribi = start_gr->get_weg_ribi_unmasked(besch->get_waytype());
+			if(  ribi_t::ist_einfach(ribi)  ) {
+				// only single tile under start => try to connect to next tile
+				koord3d next_to_start = koord3d( start.get_2d()-koord(ribi), start_gr->get_vmove( ribi_t::rueckwaerts(ribi) ) );
+				wegbauer_t bauigel(sp);
+				bauigel.set_keep_existing_ways(true);
+				bauigel.set_keep_city_roads(true);
+				bauigel.set_maximum(20);
+				bauigel.route_fuer( (wegbauer_t::bautyp_t)besch->get_waytype(), wegbauer_t::weg_search( besch->get_waytype(), besch->get_topspeed(), welt->get_timeline_year_month(), weg_t::type_flat ), NULL, NULL );
+				bauigel.calc_route( start, next_to_start );
+				if(  bauigel.get_count() == 2  ) {
+					bauigel.baue();
 				}
 			}
 		}
