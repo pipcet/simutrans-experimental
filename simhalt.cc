@@ -2054,6 +2054,22 @@ bool haltestelle_t::recall_ware( ware_t& w, uint32 menge )
 	return false;
 }
 
+sint64 tolerance_count(ware_t *ware, sint32 improvement)
+{
+	sint64 hash = (ware->arrival_time ^ (ware->arrival_time >> 10)) & 1023;
+
+	while ((improvement > 0) && (hash & 1)) {
+		hash >>= 1;
+		improvement -= 128;
+	}
+
+	if (improvement <= 0) {
+		return ware->menge;
+	} else {
+		return 0;
+	}
+}
+
 
 // will load something compatible with wtyp into the car which schedule is fpl
 bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp, uint32 maxi, const schedule_t *fpl, const spieler_t *sp, convoi_t* cnv, bool overcrowded) //"hole from" (Google)
@@ -2118,6 +2134,9 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 					bool fast_is_here = loading_here.is_contained(fast_convoy);
 
 					sint64 t = welt->get_zeit_ms();
+					if (fast_arrival_time == t) {
+						continue;
+					}
 					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld/%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
 						fast_arrival_time, fast_arrival_time - t, fast_convoy.get_id(),
 						this_arrival_time, this_arrival_time - t, cnv->self.get_id(),
@@ -2151,9 +2170,9 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 						t, (sint64)cnv->get_current_loading_time(),
 						(this_arrival_time - welt->get_zeit_ms()) / (double)(fast_arrival_time - welt->get_zeit_ms()), (fast_here_arrival_time - welt->get_zeit_ms()));
 
-					if(fast_arrival_time < this_arrival_time &&
-					   this_arrival_time - welt->get_zeit_ms() > (fast_arrival_time - welt->get_zeit_ms()) * 125/100)
-					{
+					int menge = tolerance_count(next_to_load, 1024 * (this_arrival_time - fast_arrival_time) / (this_arrival_time - welt->get_zeit_ms()));
+
+					if (menge == 0) {
 						fprintf(stderr, "SKIPPING\n");
 						// Do not board this convoy if another will reach the next transfer more quickly.
 						fpl->increment_index(&index, &reverse);
