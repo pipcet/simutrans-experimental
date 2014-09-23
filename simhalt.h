@@ -488,9 +488,11 @@ private:
 	// Getter method will need to average the waiting times.
 	// @author: jamespetts
 
+ public:
 	waiting_time_map * waiting_times;
 
-
+	
+ private:
 	uint8 check_waiting;
 
 	// Added by : Knightly

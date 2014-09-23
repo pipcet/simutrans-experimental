@@ -371,6 +371,16 @@ void halt_detail_t::halt_detail_info()
 						// Test for the default waiting value
 						buf.append(translator::translate("waiting time unknown)"));
 					}
+					haltestelle_t::waiting_time_map *wt = &halt->waiting_times[0];
+
+					if (wt->is_contained(a_halt.get_id())) {
+						uint32 count = wt->access(a_halt.get_id())->times.get_count();
+						buf.printf("month %d count %d ", wt->access(a_halt.get_id())->month, count);
+						for (int i=0; i<min(count,4); i++) {
+							buf.printf("%d: %lld ",
+								   i, wt->access(a_halt.get_id())->times[i]);
+						}
+					}
 					buf.append("\n\n");
 
 					offset_y += 3 * LINESPACE;
