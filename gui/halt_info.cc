@@ -413,7 +413,7 @@ void halt_info_t::update_departures()
 
 	convoihandle_t cnv;
 	sint32 delta_t;
-	const uint32 max_listings = 12;
+	const uint32 max_listings = 144;
 	uint32 listing_count = 0;
 
 	FOR(arrival_times_map, const& iter, arrival_times)
@@ -450,6 +450,13 @@ void halt_info_t::update_departures()
 			continue;
 		}
 
+		if(!cnv->get_schedule())
+		{
+			//XXX vehicle in depot.
+			continue;
+		}
+		
+		// XXX cnv->get_schedule() NULL
 		halthandle_t next_halt = cnv->get_schedule()->get_next_halt(cnv->get_besitzer(), halt);
 		delta_t = iter.value - cur_ticks;
 		
