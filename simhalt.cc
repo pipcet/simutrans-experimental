@@ -2137,6 +2137,8 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 					if (fast_arrival_time == t) {
 						continue;
 					}
+					fprintf(stderr, "travelling from %s to %s %d\n", get_name(),
+						next_transfer->get_name(), (int)next_to_load->menge);
 					fprintf(stderr, "arrival times: fast %lld/%lld (%d) this %lld/%lld (%d) here %lld-%lld/%lld-%lld time %lld cld %lld improvement %f wait %lld\n",
 						fast_arrival_time, fast_arrival_time - t, fast_convoy.get_id(),
 						this_arrival_time, this_arrival_time - t, cnv->self.get_id(),
@@ -2152,7 +2154,7 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 					if (fast_here_arrival_time <= welt->get_zeit_ms() &&
 					    !fast_is_here) {
 						fprintf(stderr, "fast convoy is running late, should already have been here. Ignoring.\n");
-						fast_arrival_time = this_arrival_time;
+						//fast_arrival_time = this_arrival_time;
 					}
 					else if (!fast_is_here) {
 						sint64 wait = fast_here_arrival_time - welt->get_zeit_ms();
@@ -2172,7 +2174,7 @@ bool haltestelle_t::hole_ab( slist_tpl<ware_t> &fracht, const ware_besch_t *wtyp
 
 					int menge = tolerance_count(next_to_load, 1024 * (this_arrival_time - fast_arrival_time) / (this_arrival_time - welt->get_zeit_ms()));
 
-					if (menge == 0) {
+					if (menge == 0 && next_to_load->menge != 0) {
 						fprintf(stderr, "SKIPPING\n");
 						// Do not board this convoy if another will reach the next transfer more quickly.
 						fpl->increment_index(&index, &reverse);

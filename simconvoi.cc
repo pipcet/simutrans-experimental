@@ -4115,7 +4115,7 @@ void convoi_t::rdwr(loadsave_t *file)
 					file->rdwr_short(ave_count);
 					average_tpl<uint16> ave;
 					ave.total = total/count;
-					fprintf(stderr, "journey_times %d %d\n", ave.total, ave.count);
+					if(0) fprintf(stderr, "journey_times %d %d\n", ave.total, ave.count);
 					journey_times_between_schedule_points.put(departure_point, ave);
 				}
 			}
@@ -4447,7 +4447,7 @@ bool convoi_t::pruefe_alle() //"examine all" (Babelfish)
 
 void convoi_t::register_journey_time(departure_point_t departure_point, sint64 journey_time, bool other_convoys)
 {
-	fprintf(stderr, "convoy %d journey time %lld %lld\n", 
+  if(0) fprintf(stderr, "convoy %d journey time %lld %lld\n", 
 		self.get_id(), (sint64)journey_time, (sint64)journey_times_between_schedule_points.get(departure_point).get_average());
 	if(journey_times_between_schedule_points.is_contained(departure_point))
 	{
@@ -6788,7 +6788,7 @@ void convoi_t::clear_replace()
 			departure_point.entry = schedule_entry;
 			departure_point.reversed = rev;
 
-			fprintf(stderr, "%d: convoy %d halt %d ETA %lld ETD %lld journey_time %lld\n",
+			if(0) fprintf(stderr, "%d: convoy %d halt %d ETA %lld ETD %lld journey_time %lld\n",
 				(int)i, (int)self.get_id(), (int)halt.get_id(), eta, etd, journey_time_ticks);
 		}
 	}
