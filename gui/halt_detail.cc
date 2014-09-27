@@ -354,6 +354,8 @@ void halt_detail_t::halt_detail_info()
 					halt->get_welt()->sprintf_time_tenths(travelling_time_as_clock, sizeof(travelling_time_as_clock), cnx->journey_time );
 					buf.append(travelling_time_as_clock);
 					buf.append(translator::translate(" mins. travelling"));
+					id_pair pair(halt.get_id(), a_halt.get_id());
+					//halt->get_average_journey_times().access(pair);
 					buf.append(", ");
 					if(halt->is_within_walking_distance_of(a_halt) && !cnx->best_convoy.is_bound() && !cnx->best_line.is_bound())
 					{

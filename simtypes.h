@@ -223,7 +223,11 @@ public:
 	*/
 	inline T reduce()
 	{
-		return total; 
+		if (count == 0) {
+			return 0;
+		} else {
+			return total;
+		}
 	}
 };
 

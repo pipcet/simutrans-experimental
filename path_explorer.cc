@@ -627,7 +627,7 @@ void path_explorer_t::compartment_t::step()
 			{
 				current_convoy = *i;
 				// only consider lineless convoys which support this compartment's goods catetory which are not in the depot
-				if (!current_convoy->in_depot() && !current_convoy->get_line().is_bound() && current_convoy->get_goods_catg_index().is_contained(catg) )
+				if (!current_convoy->in_depot() && /* !current_convoy->get_line().is_bound() && */ current_convoy->get_goods_catg_index().is_contained(catg) )
 				{
 					temp_linkage.convoy = current_convoy;
 					linkages->append(temp_linkage);
@@ -652,7 +652,7 @@ void path_explorer_t::compartment_t::step()
 				{
 					current_line = *j;
 					// only consider lines which support this compartment's goods category
-					if ( current_line->get_goods_catg_index().is_contained(catg) && current_line->count_convoys() > 0)
+					if ( false && current_line->get_goods_catg_index().is_contained(catg) && current_line->count_convoys() > 0)
 					{
 						temp_linkage.line = current_line;
 						linkages->append(temp_linkage);
@@ -777,7 +777,7 @@ void path_explorer_t::compartment_t::step()
 					journey_time = 0;
 					const id_pair pair(halt_list[i].get_id(), halt_list[(i+1)%entry_count].get_id());
 					
-					if ( current_linkage.line.is_bound() && current_linkage.line->get_average_journey_times().is_contained(pair) )
+					if ( false && current_linkage.line.is_bound() && current_linkage.line->get_average_journey_times().is_contained(pair) )
 					{
 						if(!halt_list[i].is_bound() || ! halt_list[(i+1)%entry_count].is_bound())
 						{
@@ -862,7 +862,7 @@ void path_explorer_t::compartment_t::step()
 						new_connexion = new haltestelle_t::connexion;
 						new_connexion->waiting_time = halt_list[h]->get_average_waiting_time(halt_list[t], catg);
 						new_connexion->transfer_time = catg != warenbauer_t::passagiere->get_catg_index() ? halt_list[h]->get_transshipment_time() : halt_list[h]->get_transfer_time();
-						if(current_linkage.line.is_bound())
+						if(0 && current_linkage.line.is_bound())
 						{
 							average_tpl<uint16>* ave = current_linkage.line->get_average_journey_times().access(halt_pair);
 							if(ave && ave->count > 0)
@@ -1227,7 +1227,7 @@ void path_explorer_t::compartment_t::step()
 						= transport_idx;
 
 					// Debug journey times
-					// printf("\n%s -> %s : %lu \n",current_halt->get_name(), reachable_halt->get_name(), working_matrix[phase_counter][reachable_halt_index].journey_time);
+					//fprintf(stderr, "\n%s -> %s : %lu \n",current_halt->get_name(), reachable_halt->get_name(), working_matrix[phase_counter][reachable_halt_index].journey_time);
 				}
 
 				// Special case

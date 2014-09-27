@@ -6919,9 +6919,9 @@ void convoi_t::emergency_go_to_depot()
 
 journey_times_map& convoi_t::get_average_journey_times()
 {
-	if(line.is_bound())
+	if(false && line.is_bound())
 	{
-		return line->get_average_journey_times();
+	  //return line->get_average_journey_times();
 	}
 	else
 	{
